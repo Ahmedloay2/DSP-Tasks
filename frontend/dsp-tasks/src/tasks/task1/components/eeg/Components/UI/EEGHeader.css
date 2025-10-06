@@ -1,0 +1,174 @@
+/**
+ * eeg Header Styles - Matching Task1Home Design
+ * Modern gradient background with wave animation and feature highlights
+ */
+
+.eeg-header-wrapper {
+  margin-bottom: var(--space-12);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--signal-primary) 100%);
+  border-radius: var(--radius-xl);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  animation: eegSlideIn 0.8s ease-out;
+}
+
+/* Animated wave background effect */
+.eeg-header-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100"><path d="M0,50 Q250,0 500,50 T1000,50 V100 H0 Z" fill="rgba(255,255,255,0.1)"/></svg>') repeat-x;
+  background-size: 200px 100px;
+  animation: wave-flow 3s ease-in-out infinite;
+  opacity: 0.6;
+}
+
+@keyframes wave-flow {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-50px); }
+}
+
+@keyframes eegSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.eeg-header-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: var(--space-16) var(--space-6);
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.eeg-header-title {
+  font-size: var(--text-4xl);
+  font-weight: 800;
+  color: var(--text-inverse);
+  margin-bottom: var(--space-5);
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  font-family: var(--font-display);
+  animation: eegSlideIn 0.8s ease-out;
+}
+
+.eeg-header-description {
+  font-size: var(--text-lg);
+  color: rgba(255, 255, 255, 0.95);
+  line-height: 1.7;
+  margin-bottom: var(--space-10);
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+  animation: eegSlideIn 0.8s ease-out 0.2s both;
+}
+
+/* Feature Items Grid */
+.eeg-header-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
+  margin-top: var(--space-8);
+  animation: eegSlideIn 1s ease-out 0.4s both;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-lg);
+  color: var(--text-inverse);
+  font-weight: 600;
+  font-size: var(--text-base);
+  backdrop-filter: blur(10px);
+  transition: var(--transition-normal);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.feature-item:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.feature-item svg {
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .eeg-header-wrapper {
+  background: linear-gradient(135deg, #1e40af 0%, var(--signal-primary-dark) 100%);
+}
+
+[data-theme="dark"] .feature-item {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="dark"] .feature-item:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .eeg-header-content {
+    padding: var(--space-10) var(--space-4);
+  }
+
+  .eeg-header-title {
+    font-size: var(--text-3xl);
+  }
+
+  .eeg-header-description {
+    font-size: var(--text-base);
+  }
+
+  .eeg-header-features {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-3);
+  }
+
+  .feature-item {
+    font-size: var(--text-sm);
+    padding: var(--space-3);
+  }
+
+  .feature-item svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .eeg-header-title {
+    font-size: var(--text-2xl);
+  }
+
+  .eeg-header-features {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+    .task1-eeg-header-main {
+        font-size: 1.75rem;
+    }
+    
+    .task1-eeg-header-description {
+        font-size: 1rem;
+    }
+}

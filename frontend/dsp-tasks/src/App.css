@@ -1,0 +1,51 @@
+/**
+ * App Component Styles
+ * 
+ * Clean, minimal styles for the main App component.
+ * Most styling is handled by the design system in index.css and component-specific CSS files.
+ */
+
+/* Reset any default margins/padding */
+#root {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+/* App-specific styles if needed */
+.app {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Utility classes for common app-wide needs */
+.app-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-size: var(--text-lg);
+  color: var(--text-secondary);
+}
+
+.app-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--space-4);
+  text-align: center;
+}
+
+.app-error h1 {
+  color: var(--error);
+  margin-bottom: var(--space-4);
+}
+
+.app-error p {
+  color: var(--text-secondary);
+  max-width: 500px;
+  line-height: 1.6;
+}

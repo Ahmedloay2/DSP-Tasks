@@ -1,0 +1,527 @@
+/* Task1HomeCard Component Styles */
+
+.task1-home-card {
+  background: var(--card-bg);
+  border-radius: 20px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  border: 1px solid var(--border-color);
+  position: relative;
+  animation: cardSlideIn 0.6s ease-out both;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.task1-home-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  border-color: var(--primary-color);
+}
+
+[data-theme="dark"] .task1-home-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .task1-home-card:hover {
+  border-color: #60a5fa;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.task1-home-card.task1-card-hovered .task1-card-glow {
+  opacity: 1;
+}
+
+/* Task1 Card Image Container */
+.task1-card-image-container {
+  height: 200px;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.task1-signal-icon {
+  font-size: 4rem;
+  z-index: 3;
+  position: relative;
+  animation: task1IconFloat 3s ease-in-out infinite;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+.task1-card-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, 
+    rgba(255, 255, 255, 0.1) 0%, 
+    transparent 50%, 
+    rgba(255, 255, 255, 0.1) 100%);
+  z-index: 2;
+}
+
+/* Task1 Card Content */
+.task1-card-content {
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  gap: 20px;
+  height: 100%;
+  min-height: 0;
+}
+
+.task1-card-header {
+  margin-bottom: 20px;
+}
+
+.task1-card-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text-color);
+  margin: 0 0 10px 0;
+  transition: all 0.3s ease;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.task1-home-card:hover .task1-card-title {
+  color: var(--primary-color);
+  transform: translateY(-2px);
+  text-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+[data-theme="dark"] .task1-home-card:hover .task1-card-title {
+  color: #60a5fa;
+  text-shadow: 0 2px 8px rgba(96, 165, 250, 0.4);
+}
+
+.task1-title-underline {
+  width: 0;
+  height: 3px;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+.task1-home-card:hover .task1-title-underline {
+  width: 60px;
+}
+
+.task1-card-description {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  flex: 1 1 auto;
+  min-height: 60px;
+}
+
+.task1-home-card:hover .task1-card-description {
+  color: var(--text-color);
+  transform: translateY(-1px);
+}
+
+[data-theme="dark"] .task1-card-description {
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .task1-home-card:hover .task1-card-description {
+  color: #f1f5f9;
+}
+
+/* Task1 Features Section */
+.task1-card-features {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  flex-shrink: 0;
+}
+
+.task1-features-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.task1-features-title::before {
+  content: '⚡';
+  font-size: 1.2rem;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+.task1-home-card:hover .task1-features-title {
+  color: var(--primary-color);
+  transform: translateY(-1px);
+}
+
+[data-theme="dark"] .task1-features-title {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .task1-home-card:hover .task1-features-title {
+  color: #60a5fa;
+}
+
+.task1-features-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.task1-feature-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  opacity: 0.8;
+  transition: all 0.3s ease;
+  transform: translateX(-5px);
+  border-radius: 8px;
+  padding-left: 5px;
+  margin-left: -5px;
+}
+
+.task1-home-card:hover .task1-feature-item {
+  opacity: 1;
+  transform: translateX(0);
+  /*background: rgba(59, 130, 246, 0.05);*/
+}
+.task1-feature-item:nth-child(1) { transition-delay: 0.1s; }
+.task1-feature-item:nth-child(2) { transition-delay: 0.15s; }
+.task1-feature-item:nth-child(3) { transition-delay: 0.2s; }
+
+.task1-feature-check {
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, var(--accent-color), #10b981);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.8rem;
+  font-weight: bold;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+  transition: all 0.3s ease;
+}
+
+.task1-home-card:hover .task1-feature-check {
+  transform: scale(1.1);
+  box-shadow: 0 3px 8px rgba(16, 185, 129, 0.4);
+}
+
+.task1-feature-text {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.task1-home-card:hover .task1-feature-text {
+  color: var(--text-color);
+  transform: translateX(2px);
+}
+
+[data-theme="dark"] .task1-feature-text {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .task1-home-card:hover .task1-feature-text {
+  color: #e2e8f0;
+}
+
+/* Task1 Card Footer */
+.task1-card-footer {
+  border-top: 1px solid var(--border-color);
+  padding-top: 20px;
+  margin-top: auto;
+  display: flex;
+  flex-shrink: 0;
+}
+
+.task1-explore-btn {
+  width: 100%;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  border: none;
+  padding: 15px 20px;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateY(0);
+  will-change: transform, box-shadow;
+}
+
+[data-theme="dark"] .task1-explore-btn {
+  box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3);
+}
+
+/* Shimmer effect - optimized */
+.task1-explore-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 255, 255, 0.15) 40%,
+    rgba(255, 255, 255, 0.25) 50%,
+    rgba(255, 255, 255, 0.15) 60%,
+    transparent 100%);
+  transition: left 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: left;
+}
+
+/* Hover state */
+.task1-explore-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px rgba(59, 130, 246, 0.35);
+  background: linear-gradient(135deg, 
+    color-mix(in srgb, var(--primary-color) 90%, white 10%), 
+    color-mix(in srgb, var(--secondary-color) 90%, white 10%));
+}
+
+[data-theme="dark"] .task1-explore-btn:hover {
+  box-shadow: 0 12px 24px rgba(96, 165, 250, 0.4);
+}
+
+.task1-explore-btn:hover::before {
+  left: 100%;
+}
+
+/* Active state */
+.task1-explore-btn:active {
+  transform: translateY(-1px);
+  transition-duration: 0.1s;
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.3);
+}
+
+/* Focus state for accessibility */
+.task1-explore-btn:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Text and arrow animations */
+.task1-btn-text {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
+.task1-btn-arrow {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 1em;
+  line-height: 1;
+  will-change: transform;
+  transform: translateY(2px);
+}
+
+.task1-explore-btn:hover .task1-btn-text {
+  transform: translateX(-3px);
+}
+
+.task1-explore-btn:hover .task1-btn-arrow {
+  transform: translateX(3px) translateY(2px);
+}
+
+/* Loading state (optional enhancement) */
+.task1-explore-btn.loading {
+  pointer-events: none;
+}
+
+.task1-explore-btn.loading .task1-btn-text {
+  opacity: 0.7;
+}
+
+.task1-explore-btn.loading .task1-btn-arrow {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { 
+    opacity: 1; 
+    transform: translateX(0) scale(1);
+  }
+  50% { 
+    opacity: 0.5; 
+    transform: translateX(2px) scale(0.95);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .task1-explore-btn,
+  .task1-btn-text,
+  .task1-btn-arrow,
+  .task1-explore-btn::before {
+    transition: none;
+  }
+  
+  .task1-explore-btn:hover {
+    transform: none;
+  }
+  
+  .task1-explore-btn::before,
+  .task1-btn-arrow {
+    animation: none;
+  }
+}
+
+/* Task1 Card Glow Effect */
+.task1-card-glow {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  border-radius: 22px;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  filter: blur(10px);
+}
+
+/* Animations */
+@keyframes cardSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes task1IconFloat {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(5deg);
+  }
+}
+
+@keyframes waveMove {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(50%);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Task1 Loading State */
+.task1-home-card.task1-loading {
+  pointer-events: none;
+}
+
+.task1-home-card.task1-loading .task1-signal-icon {
+  animation: task1Pulse 1s ease-in-out infinite;
+}
+
+/* Dark Theme Adjustments */
+[data-theme="dark"] .task1-home-card {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .task1-home-card:hover {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .card-content {
+    padding: 25px;
+  }
+
+  .card-title {
+    font-size: 1.6rem;
+  }
+
+  .card-description {
+    font-size: 0.95rem;
+  }
+
+  .card-image-container {
+    height: 160px;
+  }
+
+  .signal-icon {
+    font-size: 3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .card-content {
+    padding: 20px;
+    gap: 15px;
+  }
+
+  .card-title {
+    font-size: 1.4rem;
+  }
+
+  .card-image-container {
+    height: 140px;
+  }
+
+  .signal-icon {
+    font-size: 2.5rem;
+  }
+
+  .explore-btn {
+    padding: 12px 16px;
+    font-size: 0.9rem;
+  }
+  
+  .features-title {
+    font-size: 1rem;
+  }
+  
+  .feature-text {
+    font-size: 0.85rem;
+  }
+  
+  .task1-home-card:hover {
+    transform: translateY(-4px) scale(1.01);
+  }
+}

@@ -1,0 +1,349 @@
+/* Doppler Signal Viewer - ECG-Style Exact Match */
+
+.doppler-signal-viewer {
+    width: 100%;
+    position: relative;
+    background: var(--bg-surface);
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-light);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.doppler-signal-viewer:hover {
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.12),
+        0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="dark"] .doppler-signal-viewer {
+    background: var(--bg-surface-dark);
+    border-color: var(--border-light-dark);
+}
+
+/* Signal Canvas Container - ECG Exact Match */
+.signal-canvas-container {
+    width: 100%;
+    height: 300px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] .signal-canvas-container {
+    background: var(--bg-surface-dark);
+    border-color: var(--border-light-dark);
+}
+
+.signal-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: crosshair;
+}
+
+/* Playback Controls - ECG Exact Match */
+.doppler-playback-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] .doppler-playback-controls {
+    background: var(--bg-surface-dark);
+    border-color: var(--border-light-dark);
+}
+
+.playback-main-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.control-button {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 8px;
+    background: var(--gradient-primary);
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
+}
+
+.control-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(37, 99, 235, 0.4);
+}
+
+.control-button:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(37, 99, 235, 0.3);
+}
+
+.stop-button {
+    background: var(--gradient-error);
+    box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3);
+}
+
+.stop-button:hover {
+    box-shadow: 0 4px 8px rgba(220, 38, 38, 0.4);
+}
+
+.time-display {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.8);
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border-light);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] .time-display {
+    color: var(--text-primary-dark);
+    background: rgba(0, 0, 0, 0.3);
+    border-color: var(--border-light-dark);
+}
+
+/* Timeline - ECG Style */
+.timeline-container {
+    width: 100%;
+    cursor: pointer;
+    padding: 4px 0;
+}
+
+.timeline {
+    width: 100%;
+    height: 6px;
+    background: var(--border-medium);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] .timeline {
+    background: var(--border-medium-dark);
+}
+
+.timeline-progress {
+    height: 100%;
+    background: var(--gradient-primary);
+    border-radius: 3px;
+    transition: width 0.1s ease;
+    position: relative;
+    box-shadow: 0 0 4px rgba(37, 99, 235, 0.5);
+}
+
+.timeline-progress::after {
+    content: '';
+    position: absolute;
+    right: -3px;
+    top: -3px;
+    width: 12px;
+    height: 12px;
+    background: var(--primary);
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .timeline-progress::after {
+    border-color: var(--bg-surface-dark);
+}
+
+/* Secondary Controls */
+.secondary-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.volume-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .volume-control {
+    color: var(--text-secondary-dark);
+}
+
+.volume-slider {
+    width: 80px;
+    height: 4px;
+    background: var(--border-medium);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+[data-theme="dark"] .volume-slider {
+    background: var(--border-medium-dark);
+}
+
+.volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background: var(--primary);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.volume-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: var(--primary);
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.download-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--gradient-success);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(5, 150, 105, 0.3);
+}
+
+.download-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(5, 150, 105, 0.4);
+}
+
+.download-button:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(5, 150, 105, 0.3);
+}
+
+/* Metadata Display - ECG Style */
+.signal-metadata {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    background: rgba(5, 150, 105, 0.1);
+    border: 2px solid var(--success);
+    border-radius: 10px;
+    padding: 16px;
+    box-shadow: 0 2px 6px rgba(5, 150, 105, 0.1);
+}
+
+[data-theme="dark"] .signal-metadata {
+    background: rgba(5, 150, 105, 0.15);
+    border-color: var(--success-light);
+    box-shadow: 0 2px 6px rgba(5, 150, 105, 0.2);
+}
+
+.metadata-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.metadata-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+[data-theme="dark"] .metadata-label {
+    color: var(--text-primary-dark);
+}
+
+.metadata-value {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--success);
+}
+
+[data-theme="dark"] .metadata-value {
+    color: var(--success-light);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .doppler-signal-viewer {
+        padding: 16px;
+        gap: 12px;
+    }
+    
+    .signal-canvas-container {
+        height: 250px;
+    }
+    
+    .playback-main-controls {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    .secondary-controls {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+    
+    .signal-metadata {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        padding: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .signal-canvas-container {
+        height: 200px;
+    }
+    
+    .control-button {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .time-display {
+        font-size: 12px;
+        padding: 6px 10px;
+    }
+}

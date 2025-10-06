@@ -1,0 +1,167 @@
+/**
+ * Navbar Component Styles
+ * 
+ * Clean, responsive navigation bar using CSS variables from the theme system.
+ * Follows design system spacing, typography, and color guidelines.
+ */
+
+.navbar {
+  background: var(--bg-overlay);
+  border-bottom: 1px solid var(--border-light);
+  box-shadow: var(--shadow-lg);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  transition: all var(--transition-normal);
+  backdrop-filter: blur(20px);
+}
+
+.navbar-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 4rem;
+}
+
+/* Brand/Logo Section */
+.navbar-brand {
+  flex-shrink: 0;
+}
+
+.brand-link {
+  text-decoration: none;
+  color: var(--text);
+  transition: color var(--transition-fast);
+}
+
+.brand-link:hover {
+  color: var(--primary-light);
+}
+
+.brand-link h1 {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: 600;
+  font-family: var(--font-display);
+}
+
+/* Navigation Menu */
+.navbar-menu {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.navbar-nav {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: var(--space-6);
+}
+
+.navbar-nav li {
+  margin: 0;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  text-decoration: none;
+  color: var(--text-secondary);
+  background-color: var(--bg-secondary);
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+  position: relative;
+}
+
+.nav-link:hover {
+  color: var(--text-primary);
+  background-color: var(--bg-tertiary);
+}
+
+.nav-link.active {
+  color: var(--text-inverse);
+  background-color: var(--primary);
+  font-weight: 600;
+}
+
+/* Theme Toggle */
+.navbar-actions {
+  flex-shrink: 0;
+}
+
+.theme-toggle {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-light);
+  color: var(--text-inverse);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  font-size: var(--text-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+  backdrop-filter: blur(10px);
+}
+
+.theme-toggle:hover {
+  background: var(--bg-accent);
+  border-color: var(--border-medium);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.theme-toggle:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .navbar-container {
+    padding: 0 var(--space-3);
+    min-height: 3.5rem;
+  }
+  
+  .brand-link h1 {
+    font-size: var(--text-lg);
+  }
+  
+  .navbar-nav {
+    gap: var(--space-4);
+  }
+  
+  .nav-link {
+    padding: var(--space-2);
+    font-size: var(--text-sm);
+  }
+  
+  .theme-toggle {
+    min-width: 2.25rem;
+    min-height: 2.25rem;
+    padding: var(--space-1) var(--space-2);
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar-container {
+    padding: 0 var(--space-2);
+  }
+  
+  .navbar-nav {
+    gap: var(--space-2);
+  }
+  
+  .nav-link {
+    padding: var(--space-1) var(--space-2);
+  }
+}

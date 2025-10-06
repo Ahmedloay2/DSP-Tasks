@@ -1,0 +1,420 @@
+/* Time Control Panel Styles - Using Design System Variables */
+.time-control-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  background: var(--gradient-background);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-light);
+  backdrop-filter: blur(10px);
+}
+
+/* Playback Controls Section */
+.playback-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.control-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: var(--radius-lg);
+  font-size: 20px;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  background: var(--gradient-primary);
+  color: var(--text-inverse);
+  box-shadow: var(--shadow-md);
+}
+
+.control-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  filter: brightness(1.1);
+}
+
+.control-btn:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-md);
+}
+
+.control-btn:disabled {
+  background: var(--secondary-disabled);
+  color: var(--text-tertiary);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: var(--shadow-sm);
+}
+
+.play-pause-btn {
+  background: var(--gradient-success);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.play-pause-btn:hover:not(:disabled) {
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+  background: var(--gradient-success);
+  filter: brightness(1.1);
+}
+
+.stop-btn {
+  background: var(--gradient-error);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+.stop-btn:hover:not(:disabled) {
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.6);
+  background: var(--gradient-error);
+  filter: brightness(1.1);
+}
+
+/* Speed Control */
+.speed-control {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+}
+
+.control-label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  font-family: var(--font-primary);
+}
+
+.speed-buttons {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.speed-btn {
+  padding: var(--space-1) var(--space-3);
+  border: 2px solid var(--border-medium);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  white-space: nowrap;
+  font-family: var(--font-primary);
+}
+
+.speed-btn:hover {
+  border-color: var(--primary);
+  background: var(--bg-accent);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.speed-btn.active {
+  background: var(--gradient-primary);
+  border-color: var(--primary);
+  color: var(--text-inverse);
+  box-shadow: var(--shadow-md);
+}
+
+/* Time Display Section */
+.time-display-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.time-labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+}
+
+.current-time {
+  color: var(--signal-primary);
+  text-shadow: 0 0 10px rgba(96, 165, 250, 0.3);
+}
+
+.duration-time {
+  color: var(--text-tertiary);
+}
+
+/* Seek Bar */
+.seek-bar-container {
+  position: relative;
+  width: 100%;
+  height: 8px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border-light);
+  transition: all var(--transition-normal);
+}
+
+.seek-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, var(--signal-primary) 0%, var(--signal-tertiary) 100%);
+  border-radius: var(--radius-md);
+  transition: width 0.1s linear;
+  pointer-events: none;
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+}
+
+.seek-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.seek-bar::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--gradient-primary);
+  cursor: pointer;
+  opacity: 1;
+  position: relative;
+  z-index: 3;
+  box-shadow: var(--shadow-lg);
+}
+
+.seek-bar::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--gradient-primary);
+  cursor: pointer;
+  border: none;
+  opacity: 1;
+  box-shadow: var(--shadow-lg);
+}
+
+/* Make the seek bar visible on hover */
+.seek-bar-container:hover .seek-bar {
+  opacity: 1;
+}
+
+.seek-bar-container:hover {
+  background: var(--bg-secondary);
+  border-color: var(--border-medium);
+}
+
+/* Navigation Controls */
+.navigation-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 2px solid var(--border-medium);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  font-size: 18px;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  color: var(--text-secondary);
+}
+
+.nav-btn:hover:not(:disabled) {
+  border-color: var(--primary);
+  background: var(--bg-accent);
+  color: var(--text-primary);
+  transform: scale(1.05);
+  box-shadow: var(--shadow-md);
+}
+
+.nav-btn:active {
+  transform: scale(0.95);
+}
+
+.nav-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  border-color: var(--border-light);
+  color: var(--text-tertiary);
+}
+
+/* Zoom Control */
+.zoom-control {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+  margin-left: auto;
+}
+
+.zoom-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--border-medium);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  color: var(--text-secondary);
+}
+
+.zoom-btn:hover:not(:disabled) {
+  border-color: var(--primary);
+  background: var(--gradient-primary);
+  color: var(--text-inverse);
+  transform: scale(1.1);
+  box-shadow: var(--shadow-md);
+}
+
+.zoom-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  border-color: var(--border-light);
+  color: var(--text-tertiary);
+}
+
+.zoom-level {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 45px;
+  text-align: center;
+  font-family: var(--font-mono);
+}
+
+/* Status Indicators */
+.status-recording {
+  color: var(--signal-secondary);
+  animation: pulse 2s infinite;
+}
+
+.status-paused {
+  color: var(--warning);
+}
+
+.status-stopped {
+  color: var(--text-tertiary);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .time-control-panel {
+    gap: var(--space-3);
+    padding: var(--space-4);
+  }
+
+  .playback-controls {
+    gap: var(--space-3);
+  }
+
+  .control-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+
+  .speed-control {
+    flex-wrap: wrap;
+  }
+
+  .zoom-control {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .speed-buttons {
+    flex-wrap: wrap;
+  }
+
+  .navigation-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .control-label {
+    font-size: var(--text-xs);
+  }
+
+  .speed-btn {
+    font-size: var(--text-xs);
+    padding: var(--space-1) var(--space-2);
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .time-control-panel {
+    border: 2px solid var(--border-heavy);
+  }
+  
+  .control-btn {
+    border: 2px solid currentColor;
+  }
+  
+  .speed-btn, .nav-btn, .zoom-btn {
+    border: 2px solid var(--border-heavy);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .control-btn,
+  .speed-btn,
+  .nav-btn,
+  .zoom-btn,
+  .seek-progress {
+    transition: none;
+    animation: none;
+  }
+  
+  .control-btn:hover,
+  .speed-btn:hover,
+  .nav-btn:hover,
+  .zoom-btn:hover {
+    transform: none;
+  }
+}

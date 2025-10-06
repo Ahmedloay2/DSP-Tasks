@@ -1,0 +1,249 @@
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * 🚀 TASKS HOME - UPDATED WITH CSS VARIABLES
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * 
+ * Updated to use the new CSS variable system from index.css.
+ * Maintains the same visual design while using centralized theming.
+ */
+
+.tasks-home {
+  min-height: 100vh;
+  background: var(--gradient-background);
+  color: var(--text-primary);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Navigation Tabs Section */
+.tasks-nav-tabs {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-6);
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.nav-tab {
+  padding: var(--space-2) var(--space-4);
+  background: var(--bg-tertiary);
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  text-decoration: none;
+}
+
+.nav-tab.active,
+.nav-tab:hover {
+  background: var(--gradient-primary);
+  color: var(--text-inverse);
+  transform: translateY(-1px);
+}
+
+/* Header Section with Gradient Hero */
+.tasks-home-header {
+  padding: 5rem 0 3rem;
+  text-align: center;
+  position: relative;
+  background: var(--gradient-hero);
+  border-radius: var(--radius-lg);
+  margin: 0;
+}
+
+.header-content {
+  position: relative;
+  z-index: 2;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+}
+
+.main-title {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 800;
+  background: var(--text-inverse) ;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: var(--space-4);
+  text-shadow: 0 0 40px rgba(255, 255, 255, 0.3);
+}
+
+.main-description {
+  font-size: var(--text-xl);
+  color: var(--text-secondary);
+  margin-top: var(--space-4);
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+/* Content Section */
+.tasks-home-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-6);
+}
+
+.tasks-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-8);
+}
+
+.section-title {
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.tasks-count {
+  background: var(--bg-tertiary);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  border: 1px solid var(--border-light);
+}
+
+/* Tasks Grid */
+.tasks-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+/* Footer Section */
+.tasks-home-footer {
+  background: var(--bg-primary);
+  border-top: 1px solid var(--border-light);
+  padding: var(--space-12) 0 var(--space-8);
+  margin-top: var(--space-12);
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-6);
+  display: flex;
+  gap: var(--space-12);
+  align-items: start;
+}
+
+.footer-section h3 {
+  font-size: var(--text-xl);
+  color: var(--primary);
+  margin-bottom: var(--space-3);
+}
+
+.footer-section h4 {
+  font-size: var(--text-lg);
+  color: var(--text-primary);
+  margin-bottom: var(--space-4);
+}
+
+.footer-section p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.footer-links {
+  display: flex;
+  gap: var(--space-8);
+}
+
+.footer-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.footer-column a {
+  color: var(--text-tertiary);
+  text-decoration: none;
+  transition: color var(--transition-normal);
+}
+
+.footer-column a:hover {
+  color: var(--primary);
+}
+
+.github-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-normal);
+  text-decoration: none;
+  border: 1px solid var(--border-light);
+}
+
+.github-link:hover {
+  background: var(--primary);
+  transform: translateY(-2px);
+  border-color: var(--primary);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .tasks-nav-tabs {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .nav-tab {
+    padding: var(--space-1) var(--space-3);
+    font-size: var(--text-xs);
+  }
+  
+  .tasks-home-header {
+    padding: 3rem 0 2rem;
+  }
+  
+  .tasks-section-header {
+    flex-direction: column;
+    gap: var(--space-4);
+    text-align: center;
+  }
+  
+  .footer-content {
+    flex-direction: column;
+    gap: var(--space-8);
+    text-align: center;
+  }
+  
+  .footer-links {
+    justify-content: center;
+  }
+}
+
+/* Animations */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tasks-grid > * {
+  animation: slideInUp 0.6s ease-out both;
+}
+
+.tasks-grid > *:nth-child(1) { animation-delay: 0.1s; }
+.tasks-grid > *:nth-child(2) { animation-delay: 0.2s; }
+.tasks-grid > *:nth-child(3) { animation-delay: 0.3s; }
+.tasks-grid > *:nth-child(4) { animation-delay: 0.4s; }
+.tasks-grid > *:nth-child(5) { animation-delay: 0.5s; }
+.tasks-grid > *:nth-child(6) { animation-delay: 0.6s; }

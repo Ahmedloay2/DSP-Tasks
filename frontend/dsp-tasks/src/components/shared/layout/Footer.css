@@ -1,0 +1,176 @@
+/**
+ * Footer Component Styles
+ * 
+ * Clean, informative footer using CSS variables from the theme system.
+ * Responsive design with proper spacing and typography.
+ */
+
+.footer {
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-light);
+  margin-top: auto;
+  transition: all var(--transition-normal);
+  backdrop-filter: blur(20px);
+}
+
+.footer-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-4) var(--space-4);
+}
+
+.footer-content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+/* Footer sections */
+.footer-section {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 250px;
+}
+
+.footer-section:first-child {
+  flex: 2;
+}
+
+.footer-section h3,
+.footer-section h4 {
+  margin: 0 0 var(--space-1) 0;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.footer-section h3 {
+  font-size: var(--text-xl);
+  font-family: var(--font-display);
+}
+
+.footer-section h4 {
+  font-size: var(--text-base);
+}
+
+.footer-section p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+}
+
+/* Brand section specific styles */
+.footer-brand p {
+  max-width: 300px;
+}
+
+/* Footer links */
+.quick-links {
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  align-items: start;
+  gap: 10px;
+  margin: 0 10%;
+}
+.footer-links {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  justify-content: start;
+  align-items: start;
+  gap: 0px;
+  height: 20vh;
+  padding: 0%;
+}
+
+.footer-links a {
+  color: var(--text-base);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+  padding:0;
+}
+
+.footer-links a:hover {
+  color: #a5b4fc;
+}
+
+/* Social links */
+.social-links {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.social-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-base);
+  text-decoration: none;
+  padding: var(--space-1) 0;
+  transition: all var(--transition-fast);
+}
+
+.social-link:hover {
+  color: #a5b4fc;
+}
+
+.social-icon {
+  font-size: var(--text-lg);
+}
+
+.social-text {
+  font-size: var(--text-sm);
+}
+
+/* Footer bottom */
+.footer-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: var(--space-4);
+  text-align: center;
+}
+
+.footer-bottom p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: var(--text-sm);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .footer-content {
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+  
+  .footer-section {
+    flex: 1;
+    min-width: auto;
+  }
+  
+  .footer-container {
+    padding: var(--space-6) var(--space-3) var(--space-3);
+  }
+  
+  .social-links {
+    flex-direction: row;
+    gap: var(--space-4);
+  }
+}
+
+@media (max-width: 480px) {
+  .footer-container {
+    padding: var(--space-4) var(--space-2) var(--space-2);
+  }
+  
+  .footer-content {
+    gap: var(--space-4);
+  }
+  
+  .footer-section h3 {
+    font-size: var(--text-lg);
+  }
+}

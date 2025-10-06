@@ -1,0 +1,245 @@
+/* XOR Viewer Styles */
+.xor-viewer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+  background: var(--bg-surface, #ffffff);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: var(--shadow-md, 0 4px 6px rgba(0, 0, 0, 0.1));
+}
+
+.xor-content {
+  display: flex;
+  gap: 20px;
+  flex: 1;
+  min-height: 0;
+}
+
+.xor-left {
+  flex-shrink: 0;
+  width: 300px;
+  overflow-y: auto;
+}
+
+.xor-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.viewer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--border-light, #e0e0e0);
+}
+
+.viewer-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary, #2c3e50);
+  margin: 0;
+}
+
+.chunk-size-control {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.chunk-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary, #7f8c8d);
+}
+
+.chunk-slider {
+  width: 150px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bg-tertiary, #ecf0f1);
+  outline: none;
+  cursor: pointer;
+}
+
+.chunk-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--primary, #3498db);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.chunk-slider::-webkit-slider-thumb:hover {
+  background: var(--primary-dark, #2980b9);
+  transform: scale(1.2);
+}
+
+.chunk-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary, #2c3e50);
+  min-width: 35px;
+}
+
+.xor-canvas {
+  flex: 1;
+  min-height: 400px;
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid var(--border-light, #e0e0e0);
+  border-radius: 8px;
+}
+
+.selected-channel-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: var(--bg-tertiary, #f8f9fa);
+  border-radius: 8px;
+  border: 1px solid var(--border-light, #e0e0e0);
+}
+
+.channel-indicator {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.channel-text {
+  font-size: 14px;
+  color: var(--text-primary, #2c3e50);
+  font-weight: 500;
+}
+
+.no-channel-text {
+  font-size: 14px;
+  color: var(--text-secondary, #7f8c8d);
+  font-style: italic;
+}
+
+.xor-legend {
+  background: var(--bg-tertiary, #f8f9fa);
+  border-radius: 8px;
+  padding: 12px;
+  border: 1px solid var(--border-light, #e0e0e0);
+}
+
+.legend-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary, #2c3e50);
+  margin: 0 0 8px 0;
+}
+
+.legend-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: white;
+  border-radius: 6px;
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.legend-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary, #7f8c8d);
+}
+
+.xor-info {
+  background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+  border-radius: 8px;
+  padding: 12px;
+  border: 1px solid var(--border-light, #e0e0e0);
+}
+
+.info-text {
+  font-size: 13px;
+  color: var(--text-primary, #2c3e50);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Dark theme */
+[data-theme="dark"] .xor-viewer {
+  background: var(--bg-surface-dark, #2c3e50);
+}
+
+[data-theme="dark"] .viewer-title,
+[data-theme="dark"] .legend-title,
+[data-theme="dark"] .chunk-value {
+  color: var(--text-primary-dark, #ecf0f1);
+}
+
+[data-theme="dark"] .xor-legend,
+[data-theme="dark"] .xor-info {
+  background: var(--bg-tertiary-dark, #34495e);
+}
+
+[data-theme="dark"] .xor-canvas {
+  background: #1a1a1a;
+  border-color: var(--border-dark, #4a5f7f);
+}
+
+[data-theme="dark"] .legend-item {
+  background: var(--bg-surface-dark, #2c3e50);
+}
+
+[data-theme="dark"] .info-text {
+  color: var(--text-primary-dark, #ecf0f1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .xor-content {
+    flex-direction: column;
+  }
+
+  .xor-left {
+    width: 100%;
+    max-height: 300px;
+  }
+
+  .viewer-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .chunk-size-control {
+    width: 100%;
+  }
+
+  .chunk-slider {
+    flex: 1;
+  }
+
+  .xor-canvas {
+    min-height: 300px;
+  }
+}

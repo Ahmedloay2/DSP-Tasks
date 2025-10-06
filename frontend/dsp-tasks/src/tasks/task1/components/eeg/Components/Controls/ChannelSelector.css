@@ -1,0 +1,228 @@
+/* Channel Selector Styles */
+.channel-selector {
+  background: var(--bg-surface, #ffffff);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: var(--shadow-md, 0 4px 6px rgba(0, 0, 0, 0.1));
+  border: 1px solid var(--border-light, #e0e0e0);
+}
+
+.channel-selector-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--border-light, #e0e0e0);
+}
+
+.channel-selector-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary, #2c3e50);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.channel-count {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary, #7f8c8d);
+  margin-right: 10px;
+}
+
+.channel-selector-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.selection-hint {
+  display: flex;
+  align-items: center;
+}
+
+.hint-text {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary, #7f8c8d);
+  padding: 4px 12px;
+  background: var(--bg-tertiary, #f8f9fa);
+  border-radius: 6px;
+}
+
+.channel-action-btn {
+  padding: 6px 12px;
+  background: var(--primary, #3498db);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.channel-action-btn:hover:not(:disabled) {
+  background: var(--primary-dark, #2980b9);
+  transform: translateY(-1px);
+}
+
+.channel-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.channel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.channel-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--bg-tertiary, #f8f9fa);
+  border: 2px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.channel-item:hover {
+  background: var(--bg-hover, #e9ecef);
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.channel-item.selected {
+  background: var(--bg-selected, #e3f2fd);
+  border-color: var(--primary, #3498db);
+}
+
+.channel-item.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.channel-item.disabled:hover {
+  transform: none;
+  box-shadow: none;
+  background: var(--bg-tertiary, #f8f9fa);
+}
+
+.channel-color-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.channel-name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary, #2c3e50);
+}
+
+.channel-checkbox {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border-medium, #bdc3c7);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.channel-item.selected .channel-checkbox {
+  background: var(--primary, #3498db);
+  border-color: var(--primary, #3498db);
+}
+
+.checkmark {
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.selection-label {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 18px;
+  height: 18px;
+  background: var(--success, #27ae60);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Dark theme support */
+[data-theme="dark"] .channel-selector {
+  background: var(--bg-surface-dark, #2c3e50);
+  border-color: var(--border-dark, #34495e);
+}
+
+[data-theme="dark"] .channel-selector-title {
+  color: var(--text-primary-dark, #ecf0f1);
+}
+
+[data-theme="dark"] .channel-count {
+  color: var(--text-secondary-dark, #95a5a6);
+}
+
+[data-theme="dark"] .channel-item {
+  background: var(--bg-tertiary-dark, #34495e);
+}
+
+[data-theme="dark"] .channel-item:hover {
+  background: var(--bg-hover-dark, #3d566e);
+}
+
+[data-theme="dark"] .channel-item.selected {
+  background: var(--bg-selected-dark, #1e3a5f);
+}
+
+[data-theme="dark"] .channel-name {
+  color: var(--text-primary-dark, #ecf0f1);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .channel-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 8px;
+  }
+
+  .channel-item {
+    padding: 8px 10px;
+  }
+
+  .channel-selector-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .channel-selector-actions {
+    width: 100%;
+  }
+
+  .channel-action-btn {
+    flex: 1;
+  }
+}
