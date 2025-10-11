@@ -1,566 +1,410 @@
-# 📊 DSP-Tasks: Advanced Signal Processing & Visualization Toolkit# Signal Processing and Analysis Toolkit
+# Multi-Channel Signal Viewer & Classifier
 
+A comprehensive web-based application for visualizing and classifying biomedical, acoustic, and radio frequency signals using advanced signal processing techniques and AI-powered analysis.
 
+## Overview
 
-<div align="center">## Task 1 - Signal Viewer: Multi-Signal Viewer with Basic Processing
+This project provides a unified platform for analyzing multiple types of signals across different domains:
+- **Biomedical Signals**: ECG and EEG with multiple visualization modes
+- **Acoustic Signals**: Doppler effect simulation and detection, drone sound classification
+- **RF Signals**: SAR image analysis for land-water segmentation
 
+## Features
 
+### 🫀 ECG Signal Analysis
 
-![React](https://img.shields.io/badge/React-19.1.1-61DAFB?style=for-the-badge&logo=react&logoColor=white)### Overview
+**Visualization Modes:**
+- Continuous-time signal viewer
+- XOR graph representation
+- Polar graph visualization
+- Recurrence plot analysis
 
-![Vite](https://img.shields.io/badge/Vite-7.1.7-646CFF?style=for-the-badge&logo=vite&logoColor=white)A comprehensive signal visualization and analysis tool that supports multiple signal types including medical, acoustic, and radiofrequency signals with integrated AI-based analysis capabilities.
+**AI-Powered Classification:**
+The system classifies ECG signals into six categories:
+- Atrial Fibrillation/Flutter (AFIB)
+- Hypertrophy (HYP)
+- Myocardial Infarction (MI)
+- Normal Sinus Rhythm
+- Other Abnormality
+- ST-T Changes (STTC)
 
-![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+### 🧠 EEG Signal Analysis
 
-![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)## Medical Signals Viewer
+**Visualization Modes:**
+- Continuous-time signal viewer
+- XOR graph representation
+- Polar graph visualization
+- Recurrence plot analysis
 
+**AI-Powered Classification:**
+The system detects neurological conditions:
+- Normal
+- Alzheimer's Disease
+- Epilepsy
+- Parkinson's Disease
 
+### 🔊 Acoustic Signal Processing
 
-**A comprehensive web-based signal visualization and analysis platform supporting medical, acoustic, and radiofrequency signals with AI-powered analysis capabilities.**### Features
+#### Doppler Effect Generator
+Simulates the sound of a passing vehicle with configurable parameters:
+- Vehicle velocity
+- Sound frequency
 
-- **Multi-channel ECG/EEG Visualization**
+Generates realistic Doppler-shifted audio demonstrating frequency compression and expansion.
 
-[🚀 Live Demo](#) • [📖 Documentation](#features) • [🐛 Report Bug](../../issues) • [✨ Request Feature](../../issues)- **Abnormality Detection** using pretrained AI models
+#### Doppler Effect Detector
+Analyzes uploaded audio files to:
+- Detect presence of Doppler effect
+- Estimate vehicle velocity
+- Determine original sound frequency
 
-- **Multiple Viewer Types**:
+#### Drone Sound Classifier
+Binary AI classifier that determines whether an audio sample contains drone sounds.
 
-</div>  - Continuous-time signal viewer
+### 📡 SAR Signal Analysis
 
-  - XOR graph visualization
+Processes Synthetic Aperture Radar (SAR) images to estimate:
+- Water-to-land ratio
+- Geographic terrain composition
 
----  - Polar graph representation
+Uses deep learning models for accurate segmentation and analysis.
 
-  - Reoccurrence graph
-
-## 📑 Table of Contents
-
-### Supported Abnormalities
-
-- [Overview](#-overview)The system detects four distinct types of signal abnormalities:
-
-- [Features](#-features)1. **Arrhythmia** - Irregular heart rhythms
-
-  - [Medical Signals](#-medical-signals-viewer)2. **Bradycardia** - Abnormally slow heart rate
-
-  - [Acoustic Signals](#-acoustic-signals-viewer)3. **Tachycardia** - Abnormally fast heart rate
-
-  - [Radiofrequency Signals](#-radiofrequency-signals-viewer)4. **Ischemia** - Reduced blood flow to heart tissue
-
-- [Technology Stack](#-technology-stack)
-
-- [Installation](#-installation)### Viewer Types
-
-- [Usage](#-usage)
-
-- [Project Structure](#-project-structure)#### 1. Continuous-Time Signal Viewer
-
-- [AI Models](#-ai-models)![Continuous Time Viewer](images/task1/medical/continuous_time_viewer.png)
-
-- [Contributing](#-contributing)*Default viewer with fixed time-length viewport, speed control, zoom, pan, and play/stop functionality*
-
-- [License](#-license)
-
-- [Contact](#-contact)#### 2. XOR Graph
-
-![XOR Graph](images/task1/medical/xor_graph.png)
-
----*Signal chunks plotted with XOR function - identical chunks erase each other*
-
-
-
-## 🎯 Overview#### 3. Polar Graph
-
-![Polar Graph](images/task1/medical/polar_graph.png)
-
-DSP-Tasks is a modern, interactive web application designed for comprehensive signal processing, visualization, and analysis. Built with React and powered by AI models, it provides researchers, engineers, and students with powerful tools to analyze medical signals (ECG/EEG), acoustic phenomena (Doppler effects, drone detection), and radiofrequency signals (SAR/Cosmic).*Magnitude vs time representation in polar coordinates*
-
-
-
-### Key Highlights#### 4. Reoccurrence Graph
-
-![Reoccurrence Graph](images/task1/medical/reoccurrence_graph.png)
-
-✨ **Multi-Signal Support** - ECG, EEG, Doppler, SAR, and more  *Cumulative scatter plot between two channels*
-
-🤖 **AI-Powered Analysis** - Real-time abnormality detection and classification  
-
-📈 **Advanced Visualizations** - Multiple viewer types including XOR, Polar, and Reoccurrence graphs  ### AI Integration
-
-🎛️ **Interactive Controls** - Speed, zoom, pan, channel selection, and color mapping  - **1D Model**: Multi-channel abnormality detection upon file opening
-
-🌐 **Web-Based** - No installation required, runs in any modern browser  - **2D Model**: Trained on graph representations for same abnormality types
-
-⚡ **Real-Time Processing** - Instant signal analysis and visualization
-
-## Acoustic Signals Viewer
-
----
-
-### Vehicle-Passing Doppler Effect
-
-## ✨ Features![Doppler Effect Simulation](images/task1/acoustic/doppler_simulation.png)
-
-*Interactive simulation of vehicle passing with controllable velocity and frequency*
-
-### 🏥 Medical Signals Viewer
-
-**Features:**
-
-Visualize and analyze multi-channel **ECG (Electrocardiogram)** and **EEG (Electroencephalogram)** signals with advanced AI-powered abnormality detection.- Generate expected sound of car passing with adjustable parameters (v, f)
-
-- Real vehicle sound analysis using AI models
-
-#### 🔍 Supported Abnormalities- Velocity and frequency estimation from real audio files
-
-
-
-The system automatically detects **four types of signal abnormalities** using pretrained AI models:### Drone/Submarine Detection
-
-![Drone Detection](images/task1/acoustic/drone_detection.png)
-
-| Abnormality | Description | Detection Method |*AI-powered sound classification for unmanned vehicles*
-
-|-------------|-------------|------------------|
-
-| **Arrhythmia** | Irregular heart rhythms and patterns | Multi-channel 1D & 2D CNN |**Capabilities:**
-
-| **Bradycardia** | Abnormally slow heart rate (<60 bpm) | Frequency domain analysis |- Real data analysis for drone/submarine sounds
-
-| **Tachycardia** | Abnormally fast heart rate (>100 bpm) | Real-time rate detection |- Detection among similar ambient sounds
-
-| **Ischemia** | Reduced blood flow indicators | ST-segment analysis |- Pattern recognition in acoustic signatures
-
-
-
-#### 📊 Visualization Modes## Radiofrequency Signals Viewer
-
-
-
-<table>### SAR/Cosmic Signals
-
-<tr>![RF Signal Visualization](images/task1/rf/sar_cosmic_signals.png)
-
-<td width="50%">*Visualization and analysis of synthetic aperture radar and cosmic signals*
-
-
-
-**1. Continuous-Time Viewer** (Default)**Analysis Features:**
-
-- Fixed time-length viewport spanning the signal- Real RF signal data visualization
-
-- **Controls**: Speed, Zoom In/Out, Pan, Play/Stop- Information extraction from signal characteristics
-
-- Real-time scrolling with adjustable playback speed- Custom parameter estimation based on signal properties
-
-- Multi-channel overlay support
-
-## Installation and Setup
-
-</td>
-
-<td width="50%">```bash
-
-# Clone repository
-
-**2. XOR Graph**git clone [repository-url]
-
-- Signal divided into equal time chunkscd signal-viewer
-
-- Each chunk plotted with XOR function
-
-- Identical chunks cancel out (pattern detection)# Install dependencies
-
-- Adjustable chunk widthpip install -r requirements.txt
-
-
-
-</td># Run application
-
-</tr>python main.py
-<tr>
-<td width="50%">
-
-**3. Polar Graph**
-- **r (radius)**: Signal magnitude
-- **θ (theta)**: Time component
-- **Modes**: 
-  - Fixed time window (fading trail)
-  - Cumulative plot (full history)
-
-</td>
-<td width="50%">
-
-**4. Reoccurrence Graph**
-- Cumulative scatter plot: Channel X vs Channel Y
-- Phase space reconstruction
-- Pattern periodicity detection
-- 2D intensity color mapping
-
-</td>
-</tr>
-</table>
-
-#### 🎨 Advanced Controls
-
-- **Channel Selection**: Display individual or multiple channels simultaneously
-- **Time Period Control**: Adjust chunk size for XOR and windowing operations
-- **Color Mapping**: Customizable color schemes for 2D intensity representations
-- **Export Options**: Save visualizations and analysis results
-
-#### 🤖 AI Integration
-
-- **1D Multi-Channel Model**: Analyzes raw signal data upon file opening
-- **2D Image-Based Model**: Trained on 2D graph representations (Polar/Reoccurrence)
-- **Real-Time Classification**: Instant abnormality type notification
-- **Confidence Scores**: Probability distribution across abnormality classes
-
----
-
-### 🔊 Acoustic Signals Viewer
-
-#### 🚗 Vehicle-Passing Doppler Effect
-
-**Simulation & Analysis of Doppler Frequency Shift**
-
-**Features:**
-- **Sound Generator**: 
-  - Adjustable vehicle velocity (v)
-  - Controllable horn frequency (f)
-  - Realistic Doppler shift simulation based on physics equations
-  - Real-time audio playback
-  
-- **AI-Powered Analyzer**:
-  - Upload real vehicle-passing audio files
-  - AI model estimates:
-    - ✅ Vehicle velocity
-    - ✅ Original horn frequency
-  - Spectrogram visualization
-  - Frequency shift analysis
-
-**Controls:**
-- 🎚️ Velocity slider (0-200 km/h)
-- 🎵 Frequency adjuster (200-2000 Hz)
-- ▶️ Play/Stop generated sound
-- 📤 Upload real audio for analysis
-
-#### 🚁 Drone/Submarine Detection
-
-**AI-Powered Acoustic Classification**
-
-**Capabilities:**
-- **Real Data Analysis**: Process actual drone/submarine audio recordings
-- **Sound Detection**: Identify unmanned vehicle signatures among ambient noise
-- **Pattern Recognition**: 
-  - Spectral fingerprinting
-  - Harmonic analysis
-  - Motor noise identification
-- **Classification**: Distinguish between different vehicle types
-
-**Supported Vehicles:**
-- Quadcopter drones
-- Fixed-wing UAVs
-- Underwater vehicles (AUVs/ROVs)
-- Background noise filtering
-
----
-
-### 📡 Radiofrequency Signals Viewer
-
-#### 🛰️ SAR (Synthetic Aperture Radar) & Cosmic Signals
-
-**Advanced RF Signal Visualization & Analysis**
-
-**Features:**
-- **Signal Visualization**:
-  - Time-domain waveforms
-  - Frequency spectrum analysis
-  - Spectrogram (time-frequency representation)
-  - I/Q constellation diagrams
-
-- **Information Extraction**:
-  - Distance estimation (SAR ranging)
-  - Velocity measurement (Doppler)
-  - Target detection and tracking
-  - Cosmic event classification (pulsars, FRBs)
-
-- **Real Data Support**:
-  - Import SAR imaging data
-  - Process radio telescope observations
-  - Standard data formats (FITS, HDF5, CSV)
-
-**Analysis Tools:**
-- FFT spectrum analyzer
-- Bandwidth measurement
-- Signal-to-noise ratio (SNR) calculation
-- Peak detection and tracking
-
----
-
-## 🛠️ Technology Stack
+## Technology Stack
 
 ### Frontend
-- **Framework**: React 19.1.1
-- **Build Tool**: Vite 7.1.7
-- **Routing**: React Router DOM 7.9.3
-- **HTTP Client**: Axios 1.12.2
-- **Icons**: Lucide React, Font Awesome 7.0.1
-- **Styling**: CSS3 with modular design
+- **React 18**: Modern, component-based UI framework
+- **Vite**: Fast build tool and development server
+- **Interactive Visualizations**: Real-time signal rendering and graph generation
+- **Custom Hooks**: Theme management and reusable logic
+- **Modular Architecture**: Task-based component organization
 
-### Backend (API Services)
-- Signal processing algorithms
-- AI model inference endpoints
-- File upload and processing services
+### Backend
+- **Flask**: Lightweight Python web framework
+- **RESTful API**: Clean interface for data exchange
+- **MNE-Python**: EEG/MEG data processing library
+- **NumPy**: Numerical computing for signal processing
+- **SciPy**: Advanced signal processing algorithms
 
-### AI/ML
-- Multi-channel CNN for ECG/EEG classification
-- 2D image-based models for graph analysis
-- Audio processing models (Doppler analysis)
-- Acoustic classification networks (drone detection)
-- RF signal analysis algorithms
 
----
+## Architecture
 
-## 🚀 Installation
+```
+┌─────────────┐         ┌──────────────────┐         ┌─────────────────┐
+│   React     │ ◄────►  │  Flask API       │ ◄────►  │  Cloud-Hosted   │
+│  Frontend   │  HTTP   │  (Jupyter NB)    │  REST   │   AI Models     │
+│  (Vite)     │         │                  │         │                 │
+└─────────────┘         └──────────────────┘         └─────────────────┘
+     │                         │                          │
+     │                         │                          │
+     ▼                         ▼                          ▼
+Signal Upload          Data Processing           Classification
+Visualization          Request Routing           Analysis Results
+User Interaction       Response Handling         Model Inference
+```
+
+The Flask API (implemented as a Jupyter Notebook) serves as a middleware layer that:
+1. Receives signal data from the React frontend
+2. Preprocesses and formats data for ML models
+3. Manages communication with cloud-hosted AI services
+4. Handles file uploads (audio, images, signal data)
+5. Returns classification results and analysis to the frontend
+
+**Development Flexibility:**
+- Can be run locally via Jupyter Notebook
+- Can be deployed on Google Colab for cloud execution
+- Uses ngrok or similar tunneling for remote access when needed
+
+## Installation
 
 ### Prerequisites
+- Node.js (v14 or higher)
+- npm package manager
+- Python 3.8+ (for backend server)
+- pip package manager
 
-- **Node.js** (v18.0.0 or higher)
-- **npm** or **yarn** package manager
-- Modern web browser (Chrome, Firefox, Edge, Safari)
+### Frontend Setup
 
-### Step-by-Step Setup
-
-1. **Clone the repository**
 ```bash
-git clone https://github.com/Ahmedloay2/DSP-Tasks.git
-cd DSP-Tasks
-```
+# Clone the repository
+git clone https://github.com/ahmedloay2/dsp-tasks.git
+cd dsp-tasks/frontend/dsp-tasks
 
-2. **Navigate to frontend directory**
-```bash
-cd frontend/dsp-tasks
-```
-
-3. **Install dependencies**
-```bash
+# Install dependencies
 npm install
-# or
-yarn install
-```
 
-4. **Start development server**
-```bash
+# Start development server
 npm run dev
-# or
-yarn dev
 ```
 
-5. **Open in browser**
-```
-http://localhost:5173
-```
+The React application will start using Vite dev server (typically `http://localhost:5173`)
 
-### Build for Production
+### Backend Setup
+
+The backend API is implemented as a Jupyter Notebook in the repository.
 
 ```bash
-npm run build
-npm run preview
+# Navigate to the repository
+cd dsp-tasks
+
+# Install required packages
+pip install flask numpy mne scipy
+
+# Open and run the API notebook
+jupyter notebook
+# OR if using Google Colab, upload the notebook to Colab
 ```
 
----
+**Running the API:**
+1. Open the API notebook (located in the repository)
+2. Install all required dependencies in the notebook
+3. Run all cells to start the Flask server
+4. The API will be accessible at `http://localhost:5000` (or through Colab's tunneling service)
 
-## 💻 Usage
+**Required Python Packages:**
+- Flask (web framework)
+- numpy (numerical computing)
+- mne (EEG data processing - EEGLAB format support)
+- scipy (signal processing)
+- werkzeug (secure file handling)
+- Additional ML inference libraries for classification models
 
-### Quick Start
+**Note:** If running in Google Colab, you may need to use ngrok or Colab's built-in tunneling to expose the Flask server to your local frontend.
 
-1. **Launch the application** and navigate to Task 1 from the home page
-2. **Select a signal type**: ECG, EEG, Doppler, or SAR
-3. **Load or generate signals** using the provided controls
-4. **Explore visualizations** by switching between viewer modes
-5. **Adjust parameters** like speed, zoom, channels, and color maps
-6. **View AI analysis results** in real-time
+## Usage
 
-### Example Workflows
+### ECG/EEG Analysis
 
-#### Analyzing ECG Signals
-```javascript
-1. Click "ECG" from Task 1 home
-2. Upload multi-channel ECG file (CSV/JSON)
-3. AI model automatically detects abnormalities
-4. Switch to "Reoccurrence Graph" for 2D analysis
-5. Adjust channel selection to compare leads
-6. Export results and visualizations
+**ECG:**
+1. Select signal by name (identifier)
+2. Fetch signal data using the signal name
+3. Select visualization mode (continuous, XOR, polar, or recurrence)
+4. View real-time signal rendering
+5. Click "Classify" to receive AI-powered diagnosis
+
+**EEG:**
+1. Specify subject number (e.g., 001, 002, ...)
+2. Select channel number to view
+3. System loads EEG data from `.set` files (EEGLAB format)
+4. View first 5000 data points of selected channel
+5. Click "Classify" to detect neurological conditions
+
+### Doppler Effect Generator
+1. Navigate to Acoustic Signals → Doppler Generator
+2. Set vehicle velocity (m/s)
+3. Set sound frequency (Hz)
+4. Click "Generate" to create Doppler-shifted audio
+5. Play or download the generated sound
+
+### Doppler Effect Detector
+1. Upload an audio file
+2. Click "Analyze"
+3. View detection results:
+   - Doppler effect presence (Yes/No)
+   - Estimated velocity
+   - Original frequency
+
+### Drone Sound Detection
+1. Upload an audio sample
+2. Receive binary classification (Drone/Not Drone)
+3. View confidence score
+
+### SAR Image Analysis
+1. Upload SAR image (supported formats: .tif, .png, .jpg)
+2. Click "Analyze"
+3. View segmentation results and water-to-land ratio
+
+## API Endpoints
+
+### Biomedical Signals
+
+#### ECG
+- `GET /ecg_data?name=<signal_name>` - Retrieve ECG signal data
+  - Query Parameters:
+    - `name`: Signal identifier (first 5 characters used)
+  - Returns: JSON array of ECG data points
+
+- `GET /ecg_classification?name=<signal_name>` - Classify ECG signal
+  - Query Parameters:
+    - `name`: Signal identifier (first 5 characters used)
+  - Returns: Classification result (AFIB, HYP, MI, Normal, Other, or STTC)
+
+#### EEG
+- `POST /upload-eeg?subject_num=<num>&channel_num=<num>` - Retrieve EEG data
+  - Query Parameters:
+    - `subject_num`: Subject identifier (3-digit format)
+    - `channel_num`: EEG channel to retrieve
+  - Returns: JSON object with:
+    - `number_of_channels`: Total available channels
+    - `single_channel`: Array of 5000 data points from specified channel
+
+- `POST /eeg_classify?subject_num=<num>` - Classify EEG signal
+  - Query Parameters:
+    - `subject_num`: Subject identifier (2-digit format)
+  - Returns: Classification result (Normal, Alzheimer, Epilepsy, or Parkinson)
+
+### Acoustic Signals
+
+#### Doppler Effect
+- `POST /generate-doppler-sound` - Generate Doppler effect audio
+  - Query Parameters:
+    - `source_velocity`: Vehicle velocity (m/s)
+    - `source_freq`: Sound frequency (Hz)
+    - `normal_distance`: Perpendicular distance from observer (meters)
+    - `half_simulation_duration`: Duration for half of simulation (seconds)
+  - Returns: WAV file (`doppler_effect.wav`)
+
+#### Drone Detection
+- `POST /upload-drone-wav` - Classify drone sound
+  - Form Data:
+    - `wav_file`: Audio file (WAV format)
+  - Returns: Classification result (Drone/Not Drone)
+  - Uploaded file saved to: `uploaded_drone_audio/uploaded_drone_audio.wav`
+
+### RF Signals
+
+#### SAR Analysis
+- `POST /upload-sar-image` - Analyze SAR image
+  - Form Data:
+    - `sar_image`: SAR image file (BMP format)
+  - Returns: Water-to-land ratio analysis
+  - Uploaded file saved to: `uploaded_sar_image/uploaded_sar_image.bmp`
+
+## Project Structure
+
+```
+ahmedloay2-dsp-tasks/
+├── README.md
+└── frontend/
+    └── dsp-tasks/
+        ├── README.md
+        ├── package.json
+        ├── vite.config.js
+        ├── eslint.config.js
+        ├── index.html
+        └── src/
+            ├── App.jsx
+            ├── App.css
+            ├── main.jsx
+            ├── index.css
+            ├── components/
+            │   ├── TaskCard.jsx
+            │   ├── TasksHome.jsx
+            │   └── shared/
+            │       └── layout/
+            │           ├── Layout.jsx
+            │           ├── Navbar.jsx
+            │           └── Footer.jsx
+            ├── data/
+            │   └── allTasksData.js
+            ├── hooks/
+            │   └── useTheme.js
+            ├── styles/
+            │   ├── TaskCard.css
+            │   └── TasksHome.css
+            └── tasks/
+                └── task1/
+                    ├── index.js
+                    ├── components/
+                    │   ├── Task1.jsx
+                    │   ├── Task1Home.jsx
+                    │   ├── Task1HomeCard.jsx
+                    │   ├── ecg/
+                    │   │   ├── MultiChannelECGViewer.jsx
+                    │   │   ├── Task1ECG.jsx
+                    │   │   ├── Components/
+                    │   │   │   ├── Controls/
+                    │   │   │   │   ├── ChannelSelector.jsx
+                    │   │   │   │   └── TimeControlPanel.jsx
+                    │   │   │   ├── Detection/
+                    │   │   │   │   └── DetectionResults.jsx
+                    │   │   │   ├── UI/
+                    │   │   │   │   ├── ECGFileUploader.jsx
+                    │   │   │   │   └── ECGHeader.jsx
+                    │   │   │   └── Viewers/
+                    │   │   │       ├── ContinuousViewer.jsx
+                    │   │   │       ├── PolarViewer.jsx
+                    │   │   │       ├── RecurrenceViewer.jsx
+                    │   │   │       └── XORViewer.jsx
+                    │   │   ├── constants/
+                    │   │   │   ├── ECGConstants.js
+                    │   │   │   └── MultiChannelConfig.js
+                    │   │   └── services/
+                    │   │       ├── ECGClassificationService.js
+                    │   │       ├── RealECGDataService.js
+                    │   │       └── XORProcessor.js
+                    │   ├── eeg/
+                    │   │   ├── MultiChannelEEGViewer.jsx
+                    │   │   ├── Task1EEG.jsx
+                    │   │   ├── Components/
+                    │   │   │   ├── Controls/
+                    │   │   │   │   ├── ChannelSelector.jsx
+                    │   │   │   │   └── TimeControlPanel.jsx
+                    │   │   │   ├── Detection/
+                    │   │   │   │   └── DetectionResults.jsx
+                    │   │   │   ├── UI/
+                    │   │   │   │   ├── EEGFileUploader.jsx
+                    │   │   │   │   └── EEGHeader.jsx
+                    │   │   │   └── Viewers/
+                    │   │   │       ├── ContinuousViewer.jsx
+                    │   │   │       ├── PolarViewer.jsx
+                    │   │   │       ├── RecurrenceViewer.jsx
+                    │   │   │       └── XORViewer.jsx
+                    │   │   ├── constants/
+                    │   │   │   ├── EEGConstants.js
+                    │   │   │   └── MultiChannelConfig.js
+                    │   │   └── services/
+                    │   │       ├── EEGClassificationService.js
+                    │   │       └── RealEEGDataService.js
+                    │   ├── doppler/
+                    │   │   ├── Task1DopplerShift.jsx
+                    │   │   ├── components/
+                    │   │   │   ├── AudioPlayer.jsx
+                    │   │   │   ├── DopplerAnalyzer.jsx
+                    │   │   │   ├── DopplerGenerator.jsx
+                    │   │   │   ├── DopplerHeader.jsx
+                    │   │   │   ├── DopplerSignalViewer.jsx
+                    │   │   │   └── DroneDetector.jsx
+                    │   │   └── services/
+                    │   │       ├── DopplerApiService.js
+                    │   │       └── MockDopplerApiService.js
+                    │   └── sar/
+                    │       ├── Task1SAR.jsx
+                    │       ├── components/
+                    │       │   ├── SARHeader.jsx
+                    │       │   └── SARImageAnalyzer.jsx
+                    │       └── services/
+                    │           ├── RealSARApiService.js
+                    │           └── MockSARApiService.js
+                    ├── data/
+                    │   └── homeData.js
+                    └── styles/
+                        ├── Task1Home.css
+                        └── Task1HomeCard.css
 ```
 
-#### Generating Doppler Effect
-```javascript
-1. Navigate to "Doppler Shift" section
-2. Set vehicle velocity: 80 km/h
-3. Set horn frequency: 440 Hz
-4. Click "Generate Sound" and play
-5. Upload real audio to compare AI estimation
+**Backend Structure (Jupyter Notebook):**
+```
+backend/
+├── API_notebook.ipynb (Flask server implementation)
+├── api/
+│   └── doppler/
+│       └── doppler_effect.wav
+├── alzheimer_eeg_data/
+│   └── sub-XXX/
+│       └── eeg/
+│           └── sub-XXX_task-eyesclosed_eeg.set
+├── epilepsy_data/
+│   └── chb02_XX.edf
+├── uploaded_drone_audio/
+│   └── uploaded_drone_audio.wav
+└── uploaded_sar_image/
+    └── uploaded_sar_image.bmp
 ```
 
----
+## Model Information
 
-## 📁 Project Structure
-
-```
-DSP-Tasks/
-├── frontend/
-│   └── dsp-tasks/
-│       ├── public/                    # Static assets
-│       │   ├── dsp-bg-*.jpg          # Background images
-│       │   └── vite.svg
-│       ├── src/
-│       │   ├── components/            # Shared components
-│       │   │   ├── TaskCard.jsx
-│       │   │   ├── TasksHome.jsx
-│       │   │   └── shared/
-│       │   │       └── layout/        # Layout components
-│       │   │           ├── Navbar.jsx
-│       │   │           ├── Footer.jsx
-│       │   │           └── Layout.jsx
-│       │   ├── tasks/
-│       │   │   └── task1/             # Task 1: Signal Viewer
-│       │   │       ├── components/
-│       │   │       │   ├── ecg/       # ECG viewer components
-│       │   │       │   │   ├── MultiChannelECGViewer.jsx
-│       │   │       │   │   ├── Components/
-│       │   │       │   │   │   ├── Controls/      # Playback controls
-│       │   │       │   │   │   ├── Detection/     # AI detection UI
-│       │   │       │   │   │   ├── Viewers/       # Graph viewers
-│       │   │       │   │   │   └── UI/            # UI elements
-│       │   │       │   │   ├── services/
-│       │   │       │   │   │   └── ECGClassificationService.js
-│       │   │       │   │   └── constants/
-│       │   │       │   ├── eeg/       # EEG viewer components
-│       │   │       │   │   ├── MultiChannelEEGViewer.jsx
-│       │   │       │   │   ├── Components/
-│       │   │       │   │   ├── services/
-│       │   │       │   │   └── constants/
-│       │   │       │   ├── doppler/   # Doppler effect viewer
-│       │   │       │   │   ├── Task1DopplerShift.jsx
-│       │   │       │   │   ├── components/
-│       │   │       │   │   │   ├── AudioPlayer.jsx
-│       │   │       │   │   │   ├── DopplerAnalyzer.jsx
-│       │   │       │   │   │   ├── DopplerGenerator.jsx
-│       │   │       │   │   │   ├── DopplerSignalViewer.jsx
-│       │   │       │   │   │   └── DroneDetector.jsx
-│       │   │       │   │   └── services/
-│       │   │       │   │       ├── DopplerApiService.js
-│       │   │       │   │       └── MockDopplerApiService.js
-│       │   │       │   └── sar/       # SAR/RF viewer
-│       │   │       │       ├── Task1SAR.jsx
-│       │   │       │       ├── components/
-│       │   │       │       ├── services/
-│       │   │       │       └── styles/
-│       │   │       ├── data/
-│       │   │       │   └── homeData.js  # Task configuration
-│       │   │       └── styles/          # Task-specific styles
-│       │   ├── data/
-│       │   │   └── allTasksData.js      # Global task registry
-│       │   ├── hooks/
-│       │   │   └── useTheme.js          # Theme management
-│       │   ├── styles/                  # Global styles
-│       │   ├── App.jsx                  # Root component
-│       │   └── main.jsx                 # Entry point
-│       ├── index.html
-│       ├── package.json
-│       ├── vite.config.js
-│       └── eslint.config.js
-└── README.md
-```
-
-### Key Directories
-
-- **`components/`**: Reusable UI components and layouts
-- **`tasks/task1/`**: Complete Task 1 implementation
-- **`services/`**: API communication and data processing
-- **`constants/`**: Configuration and constant values
-- **`hooks/`**: Custom React hooks for state management
-- **`styles/`**: CSS modules for styling
-
----
-
-## 🤖 AI Models
-
-### Medical Signal Classification
-
-#### 1D Multi-Channel Model
-- **Architecture**: 1D Convolutional Neural Network
-- **Input**: Multi-channel time-series data
-- **Output**: Abnormality classification + confidence scores
-- **Training Data**: 10,000+ annotated ECG/EEG recordings
-
-#### 2D Graph-Based Model
-- **Architecture**: 2D CNN (ResNet-inspired)
-- **Input**: Polar/Reoccurrence graph images
-- **Output**: Same abnormality classes as 1D model
-- **Purpose**: Validates 1D predictions using graph patterns
-
-### Acoustic Analysis Models
-
-#### Doppler Parameter Estimation
-- **Method**: Frequency shift analysis + regression
-- **Estimates**: Vehicle velocity and horn frequency
-- **Accuracy**: ±5 km/h for velocity, ±10 Hz for frequency
-
-#### Drone/Submarine Detection
-- **Architecture**: Audio classification CNN
-- **Features**: Mel spectrograms, MFCCs
-- **Classes**: Drone, submarine, background noise
-- **Accuracy**: >95% on test set
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. **Fork the repository**
-2. **Create a feature branch** (`git checkout -b feature/AmazingFeature`)
-3. **Commit your changes** (`git commit -m 'Add some AmazingFeature'`)
-4. **Push to the branch** (`git push origin feature/AmazingFeature`)
-5. **Open a Pull Request**
-
-### Development Guidelines
-
-- Follow existing code style and conventions
-- Add comments for complex algorithms
-- Update documentation for new features
-- Test thoroughly before submitting PR
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 👥 Contact
-
-**Project Maintainer**: Ahmed Loay  
-**GitHub**: [@Ahmedloay2](https://github.com/Ahmedloay2)  
-**Repository**: [DSP-Tasks](https://github.com/Ahmedloay2/DSP-Tasks)
-
----
-
-## 🙏 Acknowledgments
-
-- Medical signal datasets from PhysioNet
-- Doppler effect physics equations
-- SAR imaging principles
-- Open-source AI/ML communities
-- React and Vite development teams
-
----
-
-<div align="center">
-
-**⭐ Star this repository if you find it helpful!**
-
-Made with ❤️ by the DSP-Tasks Team
-
-</div>
+All AI models are hosted on cloud infrastructure for:
+- **Scalability**: Handle multiple concurrent requests
+- **Performance**: GPU-accelerated inference
+- **Maintainability**: Easy model updates without redeployment
+- **Reliability**: High availability and failover support
