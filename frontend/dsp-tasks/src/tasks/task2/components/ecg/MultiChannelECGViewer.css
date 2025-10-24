@@ -1,0 +1,288 @@
+﻿/* Multi-Channel ECG Viewer Main Styles */
+.task2-multi-channel-viewer {
+  min-height: 100vh;
+  background: var(--gradient-hero, linear-gradient(135deg, #2563eb 0%, #3b82f6 100%));
+  padding: 20px;
+}
+
+.task2-viewer-main-header {
+  background: var(--bg-surface, white);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.15));
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.task2-viewer-main-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary, #2c3e50);
+  margin: 0;
+  background: var(--gradient-primary, linear-gradient(135deg, #2563eb 0%, #3b82f6 100%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.task2-data-info {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.task2-info-badge {
+  padding: 6px 14px;
+  background: var(--gradient-primary, linear-gradient(135deg, #2563eb 0%, #3b82f6 100%));
+  color: white;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* View Mode Selector */
+.task2-view-mode-selector {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.task2-view-mode-btn {
+  flex: 1;
+  min-width: 150px;
+  padding: 14px 24px;
+  background: var(--bg-surface, white);
+  border: 3px solid transparent;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary, #2c3e50);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-sm, 0 2px 8px rgba(0, 0, 0, 0.1));
+}
+
+.task2-view-mode-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.15));
+}
+
+.task2-view-mode-btn.task2-active {
+  background: var(--gradient-primary, linear-gradient(135deg, #2563eb 0%, #3b82f6 100%));
+  color: white;
+  border-color: white;
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+}
+
+/* Main Content Layout */
+.task2-viewer-content {
+  display: grid;
+  grid-template-columns: 350px 1fr;
+  gap: 20px;
+  min-height: calc(100vh - 220px);
+}
+
+.task2-viewer-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.task2-viewer-main {
+  min-height: 600px;
+}
+
+/* Loading State */
+.task2-multi-channel-viewer.task2-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.task2-loading-spinner {
+  width: 60px;
+  height: 60px;
+  border: 6px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: task2-spin 1s linear infinite;
+}
+
+@keyframes task2-spin {
+  to { transform: rotate(360deg); }
+}
+
+.task2-loading-text {
+  margin-top: 20px;
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+}
+
+/* Error State */
+.task2-multi-channel-viewer.task2-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  text-align: center;
+  padding: 40px;
+}
+
+.task2-error-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+}
+
+.task2-error-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: white;
+  margin: 0 0 12px 0;
+}
+
+.task2-error-message {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0 0 24px 0;
+  max-width: 600px;
+}
+
+.task2-retry-btn {
+  padding: 12px 32px;
+  background: var(--bg-surface, white);
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--primary, #2563eb);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.task2-retry-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.2));
+}
+
+/* No Data State */
+.task2-multi-channel-viewer.task2-no-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.task2-no-data-text {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-inverse, white);
+  margin-bottom: 20px;
+}
+
+.task2-load-btn {
+  padding: 12px 32px;
+  background: var(--bg-surface, white);
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--primary, #2563eb);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.task2-load-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.2));
+}
+
+/* Dark theme */
+[data-theme="dark"] .task2-viewer-main-header {
+  background: var(--bg-surface-dark, #1a1d21);
+}
+
+[data-theme="dark"] .task2-viewer-main-title {
+  color: var(--text-primary-dark, #f7fafc);
+}
+/* Detection Section - Below Main Viewer */
+.task2-detection-section {
+  margin-top: 30px;
+  padding: 0;
+  background: transparent;
+}
+
+.task2-detection-section > * {
+  background: var(--bg-surface);
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-light);
+  overflow: hidden;
+}
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .task2-viewer-content {
+    grid-template-columns: 300px 1fr;
+  }
+}
+
+@media (max-width: 992px) {
+  .task2-viewer-content {
+    grid-template-columns: 1fr;
+  }
+
+  .task2-viewer-sidebar {
+    order: 2;
+  }
+
+  .task2-viewer-main {
+    order: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .task2-multi-channel-viewer {
+    padding: 12px;
+  }
+
+  .task2-viewer-main-header {
+    padding: 16px;
+  }
+
+  .task2-viewer-main-title {
+    font-size: 22px;
+  }
+
+  .task2-view-mode-selector {
+    flex-direction: column;
+  }
+
+  .task2-view-mode-btn {
+    min-width: 100%;
+  }
+
+  .task2-data-info {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .task2-viewer-main-title {
+    font-size: 18px;
+  }
+
+  .task2-info-badge {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+}

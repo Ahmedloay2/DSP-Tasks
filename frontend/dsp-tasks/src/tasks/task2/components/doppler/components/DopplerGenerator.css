@@ -1,0 +1,458 @@
+﻿/* DopplerGenerator.task2-css - Sound generation component styles */
+
+.task2-doppler-generator {
+    padding: 30px;
+    background: var(--bg-secondary);
+    min-height: auto;
+}
+
+.task2-generator-header {
+    margin-bottom: 30px;
+    text-align: center;
+    padding: 24px;
+    background: var(--gradient-primary);
+    border-radius: 16px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+}
+
+.task2-generator-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.task2-w3.org/2000/svg" viewBox="0 0 100 20"><path d="M0,10 Q25,0 50,10 T100,10 V20 H0 Z" fill="rgba(255,255,255,0.1)"/></svg>') repeat-x;
+    background-size: 100px 20px;
+    animation: task2-wave-flow 2s ease-in-out infinite;
+}
+
+@keyframes task2-wave-flow {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(-25px); }
+}
+
+.task2-generator-header h3 {
+    color: white;
+    font-size: 1.6rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    position: relative;
+    z-index: 2;
+}
+
+.task2-generator-header p {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1rem;
+    margin: 0;
+    font-weight: 400;
+    position: relative;
+    z-index: 2;
+}
+
+.task2-generator-content {
+    max-width: 100%;
+}
+
+
+/* Parameters Section - ECG Form Style */
+.task2-parameters-section {
+    padding: 24px;
+    background: var(--bg-surface);
+    border-radius: 12px;
+    border: 1px solid var(--border-light);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    margin-bottom: 30px;
+}
+
+.task2-parameters-section h4 {
+    color: var(--text-primary);
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.task2-parameters-section h4::before {
+    content: '⚙️';
+    font-size: 1.3rem;
+}
+
+.task2-parameters-grid {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 24px;
+    max-width: 100%;
+}
+
+.task2-parameter-group {
+    display: flex;
+    flex-direction: column;
+    width: 48.7%;
+    gap: 12px;
+    padding: 16px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light);
+    transition: var(--transition-normal);
+}
+
+.task2-parameter-group:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.task2-parameter-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+}
+
+.task2-parameter-group label svg {
+    color: var(--primary);
+    flex-shrink: 0;
+}
+
+.task2-param-value {
+    margin-left: auto;
+    color: var(--primary);
+    font-family: var(--font-mono);
+    font-weight: 700;
+    padding: 2px 8px;
+    background: var(--bg-accent);
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+/* Slider Input Styles */
+.task2-slider-input {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 8px;
+    border-radius: 5px;
+    background: var(--bg-tertiary);
+    outline: none;
+    opacity: 0.9;
+    transition: opacity var(--transition-normal);
+    margin: 8px 0;
+    border: 1px solid var(--border-light);
+}
+
+.task2-slider-input:hover {
+    opacity: 1;
+}
+
+.task2-slider-input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--primary);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    box-shadow: var(--shadow-sm);
+}
+
+.task2-slider-input::-webkit-slider-thumb:hover {
+    background: var(--primary-hover);
+    transform: scale(1.15);
+    box-shadow: var(--shadow-md);
+}
+
+.task2-slider-input::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--primary);
+    cursor: pointer;
+    border: none;
+    transition: all var(--transition-normal);
+    box-shadow: var(--shadow-sm);
+}
+
+.task2-slider-input::-moz-range-thumb:hover {
+    background: var(--primary-hover);
+    transform: scale(1.15);
+    box-shadow: var(--shadow-md);
+}
+
+.task2-slider-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.task2-slider-input:disabled::-webkit-slider-thumb {
+    cursor: not-allowed;
+    background: var(--secondary-disabled);
+}
+
+.task2-slider-input:disabled::-moz-range-thumb {
+    cursor: not-allowed;
+    background: var(--secondary-disabled);
+}
+
+/* Numeric Input Styles */
+.task2-numeric-input {
+    padding: 12px 16px;
+    border: 2px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    font-size: 1rem;
+    transition: all var(--transition-normal);
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-weight: 600;
+    text-align: center;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.task2-numeric-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--bg-accent);
+    background: var(--bg-secondary);
+}
+
+.task2-numeric-input:disabled {
+    background: var(--bg-tertiary);
+    color: var(--text-tertiary);
+    cursor: not-allowed;
+    border-color: var(--border-light);
+}
+
+.task2-parameter-group input:not(.slider-input):not(.numeric-input) {
+    padding: 12px 16px;
+    border: 2px solid var(--border-light);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all var(--transition-normal);
+    background: var(--bg-surface);
+    color: var(--text-primary);
+}
+
+.task2-parameter-group input:not(.slider-input):not(.numeric-input):focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--bg-accent);
+}
+
+.task2-parameter-group input:not(.slider-input):not(.numeric-input):disabled {
+    background: var(--bg-tertiary);
+    color: var(--text-tertiary);
+    cursor: not-allowed;
+}
+
+.task2-parameter-hint {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.task2-generate-section {
+    grid-column: 1;
+    margin-top: 8px;
+    padding: 0;
+    background: transparent;
+    border: none;
+}
+
+.task2-generate-section:hover {
+    border: none;
+    box-shadow: none;
+}
+
+.task2-generate-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    justify-self: center;
+    align-self: center;
+    gap: 12px;
+    width: 100%;
+    padding: 18px 24px;
+    background: var(--gradient-primary);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    min-height: 56px;
+}
+
+.task2-generate-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(37, 99, 235, 0.4);
+}
+
+.task2-generate-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.task2-generate-btn svg {
+    transition: transform var(--transition-normal);
+}
+
+.task2-generate-btn:hover:not(:disabled) svg {
+    transform: scale(1.1);
+}
+
+.task2-loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: task2-spin 1s linear infinite;
+}
+
+/* Physics Info - ECG Style */
+.task2-physics-info {
+    margin-top: 30px;
+    padding: 24px;
+    background: var(--bg-accent);
+    border-radius: 12px;
+    border: 1px solid var(--border-light);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.task2-physics-info h4 {
+    color: var(--text-primary);
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.task2-formula-section {
+    text-align: center;
+}
+
+.task2-formula {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 20px;
+    font-family: 'Times New Roman', serif;
+    background: var(--bg-surface);
+    padding: 20px;
+    border-radius: 10px;
+    border: 2px solid var(--border-light);
+    display: inline-block;
+    min-width: 280px;
+    box-shadow: var(--shadow-sm);
+}
+
+.task2-formula-legend {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    text-align: left;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.task2-formula-legend div {
+    background: var(--bg-surface);
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
+    transition: all var(--transition-normal);
+    font-weight: 500;
+}
+
+.task2-formula-legend div:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+    border-color: var(--primary);
+}
+
+.task2-formula-legend strong {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.task2-physics-desc {
+    margin-top: 16px;
+    padding: 16px;
+    background: var(--bg-surface);
+    border-left: 4px solid var(--primary);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    text-align: left;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .task2-parameters-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+    
+    .task2-generator-header h3 {
+        font-size: 1.4rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .task2-doppler-generator {
+        padding: 1rem;
+    }
+    
+    .task2-generator-header {
+        padding: var(--space-4);
+    }
+    
+    .task2-generator-header h3 {
+        font-size: 1.3rem;
+    }
+    
+    .task2-generator-header p {
+        font-size: 0.9rem;
+    }
+    
+    .task2-presets-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .task2-parameters-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .task2-formula {
+        font-size: 1.2rem;
+        min-width: auto;
+        width: 100%;
+    }
+    
+    .task2-formula-legend {
+        grid-template-columns: 1fr;
+    }
+}
+
+@keyframes task2-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

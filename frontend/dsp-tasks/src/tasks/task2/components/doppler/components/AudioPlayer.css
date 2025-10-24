@@ -1,0 +1,507 @@
+﻿/* AudioPlayer.task2-css - Audio playback component styles matching ECG */
+
+.task2-audio-player {
+    padding: 2rem;
+    background: var(--bg-surface);
+    border-radius: 16px;
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.task2-audio-player:hover {
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.12),
+        0 2px 8px rgba(0, 0, 0, 0.06);
+}.task2-audio-player::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--primary-gradient);
+}
+
+.task2-player-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid var(--border-light);
+}
+
+.task2-player-header h4 {
+    color: var(--text-primary);
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.task2-audio-type-badge {
+    padding: 0.5rem 1rem;
+    background: var(--primary-gradient);
+    color: white;
+    border-radius: 25px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s ease;
+}
+
+.task2-audio-type-badge:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Player Controls */
+.task2-player-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+    padding: 1.75rem;
+    background: var(--bg-surface);
+    border-radius: 12px;
+    border: 1px solid var(--border-light);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+.task2-player-controls::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--primary-gradient);
+}
+
+.task2-controls-top-row {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.task2-play-pause-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    background: var(--primary-gradient);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+    box-shadow: var(--shadow-md);
+    position: relative;
+    overflow: hidden;
+}
+
+.task2-play-pause-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.task2-play-pause-btn:hover:not(:disabled) {
+    transform: scale(1.15);
+    box-shadow: var(--shadow-lg);
+}
+
+.task2-play-pause-btn:hover:not(:disabled)::before {
+    opacity: 1;
+}
+
+.task2-play-pause-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    background: var(--disabled-gradient);
+    box-shadow: var(--shadow-sm);
+}
+
+.task2-progress-section {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    width: 100%;
+}
+
+.task2-time-display {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+    min-width: 50px;
+    text-align: center;
+    padding: 0.5rem;
+    background: var(--primary-light-alpha);
+    border-radius: 8px;
+    border: 1px solid var(--primary-light);
+}
+
+.task2-progress-bar {
+    flex: 1;
+    height: 10px;
+    background: var(--card-gradient);
+    border-radius: 8px;
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+    box-shadow: var(--shadow-inset);
+    transition: all 0.3s ease;
+}
+
+.task2-progress-bar:hover {
+    transform: scaleY(1.2);
+    box-shadow: var(--shadow-inset), var(--shadow-primary);
+}
+
+.task2-progress-fill {
+    height: 100%;
+    background: var(--secondary-gradient);
+    border-radius: 4px;
+    position: relative;
+}
+
+.task2-progress-handle {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 16px;
+    height: 16px;
+    background: white;
+    border: 3px solid var(--primary);
+    border-radius: 50%;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 2;
+}
+
+.task2-progress-bar:hover .task2-progress-handle {
+    opacity: 1;
+}
+
+.task2-volume-section {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.task2-volume-section svg {
+    color: var(--text-secondary);
+    flex-shrink: 0;
+}
+
+.task2-volume-slider {
+    width: 80px;
+    height: 4px;
+    background: var(--border-light);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.task2-volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background: var(--primary);
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: var(--shadow-sm);
+}
+
+.task2-volume-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: var(--primary);
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: var(--shadow-sm);
+}
+
+.task2-download-section {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.task2-download-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    background: var(--button-secondary-gradient);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.task2-download-btn:hover {
+    background: var(--button-secondary-hover-gradient);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Audio Metadata - ECG Style */
+.task2-audio-metadata {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: var(--bg-surface);
+    border-radius: 12px;
+    border: 1px solid var(--border-light);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.task2-audio-metadata h5 {
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.task2-metadata-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.75rem;
+}
+
+.task2-metadata-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: var(--bg-surface);
+    border-radius: 6px;
+    border: 1px solid var(--border-light);
+    transition: all 0.3s ease;
+}
+
+.task2-metadata-item:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    border-color: var(--primary);
+}
+
+.task2-metadata-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.task2-metadata-value {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    font-weight: 600;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+}
+
+/* Physics Explanation - ECG Style */
+.task2-physics-explanation {
+    padding: 1.5rem;
+    background: var(--bg-accent);
+    border-radius: 12px;
+    border: 1px solid var(--border-light);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.task2-physics-explanation h5 {
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.task2-explanation-content {
+    background: var(--bg-surface);
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border-light);
+}
+
+.task2-explanation {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+}
+
+.task2-explanation-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+    margin-top: 0.25rem;
+}
+
+.task2-explanation p {
+    color: var(--success-text);
+    margin: 0;
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
+.task2-explanation strong {
+    color: var(--success-dark);
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 1.05rem;
+}
+
+.task2-explanation.task2-approaching {
+    background: var(--primary-gradient-light);
+    border: 1px solid var(--primary-light);
+}
+
+.task2-explanation.task2-approaching p {
+    color: var(--primary-text);
+}
+
+.task2-explanation.task2-approaching strong {
+    color: var(--primary-dark);
+}
+
+.task2-explanation.task2-receding {
+    background: var(--error-gradient-light);
+    border: 1px solid var(--error-light);
+}
+
+.task2-explanation.task2-receding p {
+    color: var(--error-text);
+}
+
+.task2-explanation.task2-receding strong {
+    color: var(--error-dark);
+}
+
+.task2-explanation.task2-stationary {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-light);
+}
+
+.task2-explanation.task2-stationary p {
+    color: var(--text-secondary);
+}
+
+.task2-explanation.task2-stationary strong {
+    color: var(--text-primary);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .task2-audio-player {
+        padding: 1rem;
+    }
+    
+    .task2-player-controls {
+        gap: 0.75rem;
+        padding: 1rem;
+    }
+    
+    .task2-controls-top-row {
+        gap: 1rem;
+    }
+    
+    .task2-progress-section {
+        gap: 0.75rem;
+    }
+    
+    .task2-time-display {
+        font-size: 0.8rem;
+        min-width: 45px;
+        padding: 0.375rem;
+    }
+    
+    .task2-volume-slider {
+        width: 60px;
+    }
+    
+    .task2-download-btn {
+        padding: 0.625rem 1.25rem;
+        font-size: 0.85rem;
+    }
+    
+    .task2-metadata-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .task2-metadata-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+    
+    .task2-explanation {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .task2-explanation-icon {
+        margin-top: 0;
+        align-self: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .task2-player-header {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-start;
+    }
+    
+    .task2-controls-top-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+        width: 100%;
+    }
+    
+    .task2-volume-section {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .task2-volume-slider {
+        width: 120px;
+    }
+    
+    .task2-time-display {
+        font-size: 0.75rem;
+        min-width: 40px;
+    }
+}

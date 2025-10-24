@@ -1,0 +1,105 @@
+﻿/**
+ * SpeechHeader Component Styles
+ * Supports Light and Dark modes
+ */
+
+.task2-speech-header {
+    background: var(--bg-surface);
+    border-radius: var(--radius-xl);
+    padding: var(--space-6);
+    margin-bottom: var(--space-6);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-light);
+    position: relative;
+    overflow: hidden;
+}
+
+.task2-speech-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--gradient-hero);
+}
+
+.task2-speech-header-content {
+    margin-bottom: var(--space-5);
+}
+
+.task2-speech-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-size: var(--text-3xl);
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 0 0 var(--space-3) 0;
+}
+
+.task2-speech-icon {
+    font-size: var(--text-3xl);
+}
+
+.task2-speech-subtitle {
+    font-size: var(--text-base);
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.6;
+}
+
+.task2-speech-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+}
+
+.task2-feature-badge {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    background: var(--gradient-primary);
+    color: white;
+    border-radius: var(--radius-full);
+    font-weight: 600;
+    font-size: var(--text-sm);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition-normal);
+}
+
+.task2-feature-badge:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.task2-badge-icon {
+    font-size: var(--text-lg);
+}
+
+.task2-badge-text {
+    font-size: var(--text-sm);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .task2-speech-title {
+        font-size: 1.8rem;
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .task2-speech-subtitle {
+        font-size: 1rem;
+        text-align: center;
+    }
+
+    .task2-speech-features {
+        justify-content: center;
+    }
+
+    .task2-feature-badge {
+        font-size: 0.8rem;
+    }
+}

@@ -1,0 +1,372 @@
+﻿/* ============================================
+   ECG Detection Results - Optimized Styles
+   Modern, clean design with improved UX
+   ============================================ */
+
+/* Main Container */
+.ecg-detection-container {
+  width: 100%;
+  max-width: 1024px;
+  margin: 0 auto;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  padding: 1.5rem;
+}
+
+/* Error Card */
+.ecg-error-card {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border-left: 4px solid #ef4444;
+  border-radius: 0 12px 12px 0;
+}
+
+.ecg-error-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.ecg-error-icon {
+  width: 20px;
+  height: 20px;
+  stroke: #ef4444;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.ecg-error-text {
+  color: #991b1b;
+  font-weight: 500;
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.ecg-error-retry {
+  margin-top: 0.5rem;
+  color: #dc2626;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: underline;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.ecg-error-retry:hover {
+  color: #b91c1c;
+}
+
+/* Loading Card */
+.ecg-loading-card {
+  padding: 3rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.ecg-loading-spinner-wrapper {
+  position: relative;
+  width: 64px;
+  height: 64px;
+}
+
+.ecg-loading-spinner-bg {
+  position: absolute;
+  width: 64px;
+  height: 64px;
+  border: 4px solid #e5e7eb;
+  border-radius: 50%;
+}
+
+.ecg-loading-spinner {
+  position: absolute;
+  width: 64px;
+  height: 64px;
+  border: 4px solid #2563eb;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: ecg-spin 1s linear infinite;
+}
+
+@keyframes ecg-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.ecg-loading-text {
+  color: #6b7280;
+  font-weight: 500;
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+/* Results Content */
+.ecg-results-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Status Card */
+.ecg-status-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 2px solid;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease;
+}
+
+.ecg-status-card:hover {
+  transform: translateY(-2px);
+}
+
+.ecg-status-normal {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  border-color: #10b981;
+}
+
+.ecg-status-abnormal {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  border-color: #ef4444;
+}
+
+.ecg-status-icon-wrapper {
+  padding: 0.75rem;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.ecg-status-normal .ecg-status-icon-wrapper {
+  background: #d1fae5;
+}
+
+.ecg-status-abnormal .ecg-status-icon-wrapper {
+  background: #fee2e2;
+}
+
+.ecg-status-icon {
+  width: 32px;
+  height: 32px;
+}
+
+.ecg-status-normal .ecg-status-icon {
+  stroke: #059669;
+  color: #047857;
+}
+
+.ecg-status-abnormal .ecg-status-icon {
+  stroke: #dc2626;
+  color: red;
+}
+
+.ecg-status-content {
+  flex: 1;
+}
+
+.ecg-status-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.ecg-status-normal .ecg-status-title {
+  color: #064e3b;
+}
+
+.ecg-status-abnormal .ecg-status-title {
+  color: #7f1d1d;
+}
+
+.ecg-status-subtitle {
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin: 0.25rem 0 0 0;
+}
+
+.ecg-status-normal .ecg-status-subtitle {
+  color: #047857;
+}
+
+.ecg-status-abnormal .ecg-status-subtitle {
+  color: #991b1b;
+}
+
+/* Details Grid */
+.ecg-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.ecg-detail-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.ecg-detail-card:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.ecg-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.ecg-detail-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+}
+
+.ecg-detail-badge {
+  padding: 0.25rem 0.5rem;
+  background: #dbeafe;
+  color: #1e40af;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 4px;
+}
+
+.ecg-detail-value {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.ecg-detail-hint {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin: 0.5rem 0 0 0;
+}
+
+.ecg-icon-small {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  flex-shrink: 0;
+}
+
+/* Clinical Note */
+.ecg-clinical-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #eff6ff;
+  border-left: 4px solid #3b82f6;
+  border-radius: 0 8px 8px 0;
+}
+
+.ecg-clinical-note .ecg-icon-small {
+  stroke: #3b82f6;
+  margin-top: 2px;
+}
+
+.ecg-clinical-text {
+  font-size: 0.875rem;
+  color: #1e40af;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Empty State */
+.ecg-empty-state {
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .ecg-details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ecg-status-card {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .ecg-status-title {
+    font-size: 1.25rem;
+  }
+
+  .ecg-detail-value {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .ecg-detection-container {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    padding: 1rem;
+  }
+
+  .ecg-status-title {
+    font-size: 1.125rem;
+  }
+
+  .ecg-detail-card {
+    padding: 1rem;
+  }
+}
+
+/* Dark Mode Support (Optional) */
+@media (prefers-color-scheme: dark) {
+  .ecg-detection-container {
+    background: #1f2937;
+    border-color: #374151;
+  }
+
+  .ecg-detail-card {
+    background: #374151;
+    border-color: #4b5563;
+  }
+
+  .ecg-detail-value {
+    color: #f9fafb;
+  }
+
+  .ecg-detail-label,
+  .ecg-loading-text {
+    color: #d1d5db;
+  }
+
+  .ecg-detail-hint {
+    color: #9ca3af;
+  }
+
+  .ecg-empty-state {
+    color: #9ca3af;
+  }
+}

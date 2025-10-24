@@ -1,0 +1,360 @@
+/**
+ * AudioPlayer Component Styles
+ * Simple, clean audio player with visible controls
+ * Uses colors from index.css for consistency
+ */
+
+.task2-speech-audio-player {
+    width: 100%;
+    background: var(--bg-surface);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-light);
+    transition: var(--transition-normal);
+}
+
+.task2-speech-audio-player:hover {
+    box-shadow: var(--shadow-lg);
+    border-color: var(--border-medium);
+}
+
+/* Waveform Visualization */
+.task2-waveform-container {
+    width: 100%;
+    background: linear-gradient(135deg, var(--bg-accent) 0%, var(--bg-tertiary) 100%);
+    padding: var(--space-4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid var(--border-light);
+}
+
+[data-theme="dark"] .task2-waveform-container {
+    background: linear-gradient(135deg, var(--bg-tertiary-dark) 0%, var(--bg-secondary-dark) 100%);
+}
+
+.task2-waveform-canvas {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: var(--radius-md);
+    background: var(--bg-surface);
+}
+
+/* Player Main Container */
+.task2-player-main {
+    padding: var(--space-5);
+}
+
+/* Player Header */
+.task2-player-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-4);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.task2-player-info {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.task2-player-icon {
+    font-size: 1.5rem;
+    filter: drop-shadow(0 2px 4px rgba(37, 99, 235, 0.2));
+}
+
+.task2-player-title {
+    margin: 0;
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Download Button */
+.task2-download-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    background: var(--gradient-primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-lg);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-normal);
+    box-shadow: var(--shadow-sm);
+}
+
+.task2-download-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.task2-download-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.task2-download-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.task2-download-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Player Controls */
+.task2-player-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    width: 100%;
+}
+
+/* Play/Pause Button */
+.task2-play-pause-btn {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--gradient-primary);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: var(--transition-normal);
+    box-shadow: var(--shadow-sm);
+}
+
+.task2-play-pause-btn:hover:not(:disabled) {
+    transform: scale(1.08);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.task2-play-pause-btn:active:not(:disabled) {
+    transform: scale(1.02);
+}
+
+.task2-play-pause-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.task2-play-pause-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* Time Display */
+.task2-time-display {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    min-width: 42px;
+    text-align: center;
+}
+
+/* Progress Container */
+.task2-progress-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+}
+
+/* Range Input Slider */
+.task2-progress-slider {
+    width: 100%;
+    height: 8px;
+    -webkit-appearance: none;
+    appearance: none;
+    border-radius: var(--radius-full);
+    outline: none;
+    cursor: pointer;
+    transition: height 0.2s ease;
+}
+
+.task2-progress-slider:hover {
+    height: 10px;
+}
+
+.task2-progress-slider:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* Webkit (Chrome, Safari, Edge) */
+.task2-progress-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 0;
+    height: 0;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+/* Firefox */
+.task2-progress-slider::-moz-range-thumb {
+    width: 0;
+    height: 0;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+/* Volume Control */
+.task2-volume-control {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.task2-volume-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: var(--transition-normal);
+}
+
+.task2-volume-btn:hover {
+    background: var(--bg-accent);
+    border-color: var(--primary);
+    transform: scale(1.05);
+}
+
+[data-theme="dark"] .task2-volume-btn {
+    background: var(--bg-tertiary-dark);
+}
+
+[data-theme="dark"] .task2-volume-btn:hover {
+    background: var(--bg-accent-dark);
+}
+
+.task2-volume-slider-container {
+    position: absolute;
+    bottom: calc(100% + var(--space-2));
+    right: 0;
+    height: 120px;
+    width: 40px;
+    padding: var(--space-3);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all var(--transition-normal);
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.task2-volume-slider-container.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+[data-theme="dark"] .task2-volume-slider-container {
+    background: var(--bg-elevated-dark);
+    border-color: var(--border-medium-dark);
+}
+
+.task2-volume-slider {
+    -webkit-appearance: slider-vertical;
+    appearance: slider-vertical;
+    writing-mode: bt-lr;
+    width: 8px;
+    height: 100px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-full);
+    outline: none;
+    cursor: pointer;
+}
+
+[data-theme="dark"] .task2-volume-slider {
+    background: var(--bg-secondary-dark);
+}
+
+.task2-volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    background: var(--primary);
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.task2-volume-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: var(--primary);
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .task2-player-main {
+        padding: var(--space-4);
+    }
+
+    .task2-player-header {
+        flex-direction: column;
+        gap: var(--space-3);
+        align-items: flex-start;
+    }
+
+    .task2-player-controls {
+        gap: var(--space-2);
+    }
+
+    .task2-play-pause-btn {
+        width: 40px;
+        height: 40px;
+    }
+
+    .task2-time-display {
+        font-size: var(--text-xs);
+        min-width: 38px;
+    }
+
+    .task2-download-btn span {
+        display: none;
+    }
+
+    .task2-waveform-canvas {
+        height: 80px;
+    }
+}
+
+@media (max-width: 480px) {
+    .task2-volume-control {
+        display: none;
+    }
+}

@@ -1,0 +1,279 @@
+﻿/* Sampling Frequency Control Styles */
+.task2-sampling-frequency-control {
+  background: var(--bg-surface, white);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.1));
+  border: 2px solid var(--border-light, #e5e7eb);
+  transition: all 0.3s ease;
+}
+
+.task2-sampling-frequency-control:hover {
+  box-shadow: var(--shadow-lg, 0 8px 24px rgba(0, 0, 0, 0.15));
+  border-color: var(--primary, #3b82f6);
+}
+
+.task2-control-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid var(--border-light, #e5e7eb);
+}
+
+.task2-control-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary, #1f2937);
+  margin: 0;
+}
+
+.task2-control-title .task2-icon {
+  font-size: 24px;
+  animation: task2-iconPulse 2s ease-in-out infinite;
+}
+
+@keyframes task2-iconPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.task2-frequency-display {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.task2-frequency-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: white !important;
+  font-family: 'Courier New', monospace;
+  min-width: 60px;
+  text-align: right;
+}
+
+.task2-frequency-unit {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.task2-control-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Slider Container */
+.task2-slider-container {
+  position: relative;
+  padding: 15px 0;
+}
+
+.task2-slider-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary, #6b7280);
+}
+
+.task2-frequency-slider {
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--bg-tertiary, #f3f4f6);
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  z-index: 2;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.task2-frequency-slider::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+  transition: all 0.2s ease;
+}
+
+.task2-frequency-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.6);
+}
+
+.task2-frequency-slider::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+  transition: all 0.2s ease;
+}
+
+.task2-frequency-slider::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.6);
+}
+
+.task2-frequency-slider:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.task2-slider-track-fill {
+  position: absolute;
+  top: 30px;
+  left: 0;
+  height: 8px;
+  background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+  border-radius: 4px 0 0 4px;
+  pointer-events: none;
+  z-index: 1;
+  transition: width 0.2s ease;
+}
+
+/* Resample Button */
+.task2-resample-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.task2-resample-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+.task2-resample-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.task2-resample-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.task2-resample-btn.task2-resampling {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+}
+
+.task2-spinner {
+  width: 16px;
+  height: 16px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: task2-spin 0.8s linear infinite;
+}
+
+@keyframes task2-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Frequency Info */
+.task2-frequency-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 15px;
+  background: var(--bg-tertiary, #f9fafb);
+  border-radius: 8px;
+  border: 1px solid var(--border-light, #e5e7eb);
+}
+
+.task2-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.task2-info-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary, #6b7280);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.task2-info-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary, #1f2937);
+  font-family: 'Courier New', monospace;
+}
+
+/* Warning Message */
+.task2-warning-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 15px;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-left: 4px solid #f59e0b;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #92400e;
+  line-height: 1.5;
+}
+
+.task2-warning-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+  animation: task2-warningPulse 2s ease-in-out infinite;
+}
+
+@keyframes task2-warningPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.task2-warning-message p {
+  margin: 0;
+  font-weight: 600;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .task2-control-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .task2-frequency-info {
+    grid-template-columns: 1fr;
+  }
+}
