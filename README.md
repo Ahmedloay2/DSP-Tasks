@@ -437,6 +437,276 @@ backend/
     └── uploaded_sar_image.bmp
 ```
 
+## Task 2 Structure & Features
+
+Task 2 focuses on **Sampling, Aliasing, and Anti-Aliasing** concepts in digital signal processing. This task demonstrates the effects of different sampling frequencies on signal quality, exploring the Nyquist theorem, aliasing artifacts, and anti-aliasing techniques.
+
+### Task 2 Signal Processing Modules
+
+#### 🫀 ECG Signal Viewer with Resampling
+**Location:** `frontend/dsp-tasks/src/tasks/task2/components/ecg/`
+
+**Features:**
+- Real-time ECG monitoring with multi-lead visualization
+- Sampling frequency adjustment (50Hz - 1000Hz)
+- Aliasing demonstration and analysis
+- Multiple visualization modes:
+  - Continuous-time signal viewer
+  - XOR graph representation
+  - Polar graph visualization
+  - Recurrence plot analysis
+  - **Sampling viewer** - visualizes effects of different sampling rates
+- Heart rate analysis
+- Anti-aliasing filter application
+- Resampling section for frequency manipulation
+
+**Key Components:**
+- `Task2ECG.jsx` - Main ECG interface with file upload (.hea, .dat)
+- `MultiChannelECGViewer.jsx` - Multi-channel ECG visualization
+- `ResamplingSection.jsx` - Sampling frequency control
+- Viewer components: ContinuousViewer, XORViewer, PolarViewer, RecurrenceViewer, SamplingViewer
+
+#### 🧠 EEG Signal Viewer with Resampling
+**Location:** `frontend/dsp-tasks/src/tasks/task2/components/eeg/`
+
+**Features:**
+- Real-time EEG monitoring with brain wave analysis
+- Multi-channel visualization (all channels loaded at 500Hz initial sampling)
+- Sampling frequency adjustment (50Hz - 1000Hz)
+- Aliasing effect demonstration
+- Frequency domain analysis
+- Multiple visualization modes (continuous, XOR, polar, recurrence, sampling)
+- EDF file format support
+
+**Key Components:**
+- `Task2EEG.jsx` - Main EEG interface with EDF file upload
+- `MultiChannelEEGViewer.jsx` - Multi-channel EEG visualization
+- `EEGFileUploader.jsx` - File upload handler for .edf files
+- `ResamplingSection.jsx` - Sampling frequency manipulation
+- Full suite of viewer components
+
+#### 🔊 Speech Recognition with Aliasing Demo
+**Location:** `frontend/dsp-tasks/src/tasks/task2/components/speech/`
+
+**Features:**
+- Audio signal upload and playback (WAV, MP3, OGG, WebM)
+- Gender recognition (Male/Female) using AI
+- Real-time speech waveform visualization
+- Sampling frequency manipulation (1kHz - 48kHz)
+- Aliasing effect demonstration in audio signals
+- Anti-aliasing filter application
+- Speech quality comparison at different sampling rates
+- Three independent processing stages:
+  1. **Original Audio Analysis** - Upload and analyze with gender recognition
+  2. **Resampled Audio** - Downsample with configurable frequency
+  3. **Anti-Aliased Audio** - Apply anti-aliasing filters before resampling
+
+**Key Components:**
+- `Task2Speech.jsx` - Main speech processing interface
+- `OriginalAudioSection.jsx` - Original audio playback and gender recognition
+- `ResampledAudioSection.jsx` - Downsampled audio analysis
+- `AntiAliasedAudioSection.jsx` - Anti-aliased audio comparison
+- `AudioPlayer.jsx` - Audio playback controls
+- `SpeechHeader.jsx` - Task header and information
+
+**API Modes:**
+- Real API mode - connects to Flask backend
+- Mock API mode - for testing without backend
+
+#### 📡 Doppler Shift Analysis
+**Location:** `frontend/dsp-tasks/src/tasks/task2/components/doppler/`
+
+**Features:**
+- Audio signal generation with Doppler effect
+- Frequency shift analysis
+- Interactive parameter control (velocity, frequency)
+- Real-time visualization
+- Audio playback capabilities
+- Doppler effect detection in uploaded audio
+- Drone sound classifier
+
+**Key Components:**
+- `Task2DopplerShift.jsx` - Main Doppler interface
+- `DopplerGenerator.jsx` - Generate Doppler-shifted audio
+- `DopplerAnalyzer.jsx` - Analyze uploaded audio for Doppler effects
+- `DroneDetector.jsx` - Binary drone sound classification
+- `DopplerSignalViewer.jsx` - Real-time signal visualization
+- `AudioPlayer.jsx` - Audio playback controls
+
+#### 🛰️ SAR Image Analysis
+**Location:** `frontend/dsp-tasks/src/tasks/task2/components/sar/`
+
+**Features:**
+- SAR image upload and visualization
+- Automated land-water classification
+- Earth/water coverage percentage estimation
+- Real-time image analysis
+- Backscatter-based surface detection
+- Support for multiple image formats (.tif, .png, .jpg, .bmp)
+
+**Key Components:**
+- `Task2SAR.jsx` - Main SAR interface
+- `SARImageAnalyzer.jsx` - Image upload and analysis
+- `SARHeader.jsx` - Task header and SAR information
+
+### Task 2 Project Structure
+
+```
+frontend/dsp-tasks/src/tasks/task2/
+├── index.js                          # Task 2 module exports
+├── components/
+│   ├── Task2.jsx                     # Task 2 root component (Outlet)
+│   ├── Task2Home.jsx                 # Task 2 landing page
+│   ├── Task2HomeCard.jsx             # Task card component
+│   │
+│   ├── ecg/                          # ECG Signal Processing
+│   │   ├── Task2ECG.jsx              # ECG main interface
+│   │   ├── MultiChannelECGViewer.jsx # Multi-channel viewer
+│   │   ├── Task2ECG.css
+│   │   ├── MultiChannelECGViewer.css
+│   │   ├── Components/
+│   │   │   ├── Controls/             # UI controls
+│   │   │   │   ├── ChannelSelector.jsx
+│   │   │   │   └── TimeControlPanel.jsx
+│   │   │   ├── Detection/
+│   │   │   │   └── DetectionResults.jsx
+│   │   │   ├── Resampling/
+│   │   │   │   └── ResamplingSection.jsx   # Sampling freq control
+│   │   │   ├── UI/
+│   │   │   │   ├── ECGFileUploader.jsx
+│   │   │   │   └── ECGHeader.jsx
+│   │   │   └── Viewers/
+│   │   │       ├── ContinuousViewer.jsx
+│   │   │       ├── XORViewer.jsx
+│   │   │       ├── PolarViewer.jsx
+│   │   │       ├── RecurrenceViewer.jsx
+│   │   │       └── SamplingViewer.jsx      # NEW: Sampling visualization
+│   │   ├── constants/
+│   │   │   ├── ECGConstants.js
+│   │   │   └── MultiChannelConfig.js
+│   │   └── services/
+│   │       ├── ECGClassificationService.js
+│   │       ├── RealECGDataService.js
+│   │       └── XORProcessor.js
+│   │
+│   ├── eeg/                          # EEG Signal Processing
+│   │   ├── Task2EEG.jsx              # EEG main interface
+│   │   ├── MultiChannelEEGViewer.jsx # Multi-channel viewer
+│   │   ├── Task2EEG.css
+│   │   ├── MultiChannelEEGViewer.css
+│   │   ├── Components/
+│   │   │   ├── Controls/
+│   │   │   │   ├── ChannelSelector.jsx
+│   │   │   │   └── TimeControlPanel.jsx
+│   │   │   ├── Detection/
+│   │   │   │   └── DetectionResults.jsx
+│   │   │   ├── Resampling/
+│   │   │   │   └── ResamplingSection.jsx
+│   │   │   ├── UI/
+│   │   │   │   ├── EEGFileUploader.jsx
+│   │   │   │   └── EEGHeader.jsx
+│   │   │   └── Viewers/
+│   │   │       ├── ContinuousViewer.jsx
+│   │   │       ├── XORViewer.jsx
+│   │   │       ├── PolarViewer.jsx
+│   │   │       ├── RecurrenceViewer.jsx
+│   │   │       └── SamplingViewer.jsx
+│   │   ├── constants/
+│   │   │   ├── EEGConstants.js
+│   │   │   └── MultiChannelConfig.js
+│   │   └── services/
+│   │       ├── EEGClassificationService.js
+│   │       └── RealEEGService.js
+│   │
+│   ├── speech/                       # Speech Signal Processing
+│   │   ├── Task2Speech.jsx           # Speech main interface
+│   │   ├── Task2Speech.css
+│   │   ├── components/
+│   │   │   ├── SpeechHeader.jsx
+│   │   │   ├── AudioPlayer.jsx       # Audio playback controls
+│   │   │   ├── OriginalAudioSection.jsx      # Original audio analysis
+│   │   │   ├── ResampledAudioSection.jsx     # Resampled audio analysis
+│   │   │   └── AntiAliasedAudioSection.jsx   # Anti-aliased audio
+│   │   ├── services/
+│   │   │   ├── RealSpeechService.js
+│   │   │   └── MockSpeechService.js
+│   │   └── index.js
+│   │
+│   ├── doppler/                      # Doppler Shift Analysis
+│   │   ├── Task2DopplerShift.jsx     # Doppler main interface
+│   │   ├── Task2DopplerShift.css
+│   │   ├── components/
+│   │   │   ├── DopplerHeader.jsx
+│   │   │   ├── DopplerGenerator.jsx  # Generate Doppler audio
+│   │   │   ├── DopplerAnalyzer.jsx   # Analyze Doppler effects
+│   │   │   ├── DroneDetector.jsx     # Drone sound classifier
+│   │   │   ├── DopplerSignalViewer.jsx
+│   │   │   └── AudioPlayer.jsx
+│   │   ├── services/
+│   │   │   ├── DopplerApiService.js
+│   │   │   └── MockDopplerApiService.js
+│   │   └── Styles/
+│   │
+│   └── sar/                          # SAR Image Analysis
+│       ├── Task2SAR.jsx              # SAR main interface
+│       ├── Task2SAR.css
+│       ├── components/
+│       │   ├── SARHeader.jsx
+│       │   └── SARImageAnalyzer.jsx  # Image upload and analysis
+│       ├── services/
+│       │   ├── RealSARApiService.js
+│       │   └── MockSARApiService.js
+│       ├── styles/
+│       └── index.js
+│
+├── data/
+│   ├── homeData.js                   # Task 2 navigation data
+│   └── index.js
+│
+└── styles/
+    ├── Task2Home.css
+    └── Task2HomeCard.css
+```
+
+### Task 2 Key Concepts
+
+**Sampling Theory:**
+- Nyquist-Shannon Sampling Theorem
+- Nyquist frequency = 2 × maximum signal frequency
+- Proper sampling preserves signal information
+
+**Aliasing:**
+- Occurs when sampling rate < Nyquist frequency
+- High-frequency components appear as lower frequencies
+- Causes signal distortion and information loss
+- Demonstrated in all Task 2 modules (ECG, EEG, Speech)
+
+**Anti-Aliasing:**
+- Low-pass filtering before downsampling
+- Removes frequency components above Nyquist limit
+- Prevents aliasing artifacts
+- Implemented in Speech and ECG/EEG modules
+
+**Resampling:**
+- Changing signal sampling rate
+- Upsampling: Increasing sampling rate (interpolation)
+- Downsampling: Decreasing sampling rate (decimation)
+- Demonstrated with adjustable frequency controls
+
+### Task 2 API Integration
+
+Task 2 modules support both Real API and Mock API modes:
+
+**Real API Mode:**
+- Connects to Flask backend for actual signal processing
+- Uploads files and receives processed results
+- Gender recognition, classification, and analysis
+
+**Mock API Mode:**
+- Simulated responses for development/testing
+- No backend connection required
+- Useful for UI development and debugging
+
 ## Model Information
 
 All AI models are hosted on cloud infrastructure for:
