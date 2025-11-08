@@ -1,0 +1,79 @@
+/* Spectrogram Viewer Styles */
+
+.spectrogram-viewer {
+  background: var(--bg-secondary, #1e293b);
+  border-radius: 15px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+}
+
+.viewer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.viewer-header h3 {
+  margin: 0;
+  color: var(--text-primary, #f1f5f9);
+  font-size: 1.2rem;
+}
+
+.no-signal {
+  color: var(--text-secondary, #94a3b8);
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+.spectrogram-canvas {
+  width: 100%;
+  height: 400px;
+  background: var(--bg-primary, #0f172a);
+  border-radius: 10px;
+  border: 1px solid var(--border-color, #475569);
+  display: block;
+}
+
+.colorbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 15px;
+  padding: 10px;
+}
+
+.colorbar-gradient {
+  flex: 1;
+  height: 20px;
+  background: linear-gradient(
+    to right,
+    rgb(0, 0, 255),
+    rgb(0, 255, 255),
+    rgb(0, 255, 0),
+    rgb(255, 255, 0),
+    rgb(255, 0, 0)
+  );
+  border-radius: 5px;
+  border: 1px solid var(--border-color, #475569);
+}
+
+.colorbar-labels {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 5px;
+}
+
+.colorbar-labels span {
+  color: var(--text-secondary, #cbd5e1);
+  font-size: 0.85rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .spectrogram-canvas {
+    height: 300px;
+  }
+}

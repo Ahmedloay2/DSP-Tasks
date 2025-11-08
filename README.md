@@ -707,6 +707,304 @@ Task 2 modules support both Real API and Mock API modes:
 - No backend connection required
 - Useful for UI development and debugging
 
+---
+
+## Task 3 Structure & Features
+
+Task 3 is an **FFT-based Audio Equalizer System** with multiple specialized modes for frequency-domain audio processing. This task demonstrates advanced signal processing concepts including Fast Fourier Transform (FFT), frequency domain manipulation, and inverse FFT for audio equalization.
+
+### Task 3 Overview
+
+The equalizer operates entirely in the browser using FFT-based frequency manipulation. It provides four specialized modes:
+
+1. **Generic Mode** - Custom frequency band control
+2. **Musical Instruments Mode** - Instrument-specific frequency ranges
+3. **Animal Sounds Mode** - Animal vocalization frequency control
+4. **Human Voices Mode** - Voice type and formant manipulation
+
+### Task 3 Equalizer Modes
+
+#### ⚙️ Generic Mode
+**Location:** `frontend/dsp-tasks/src/tasks/task3/components/generic/`
+
+**Features:**
+- Create custom frequency subdivisions with arbitrary control
+- Add/remove frequency bands dynamically
+- Scale each band from 0.0x to 2.0x
+- Supports unlimited number of bands
+- Save/load custom configurations
+- Real-time processing with progress indication
+- Dual spectrum visualization (before/after)
+- Cine signal viewer with synchronized playback
+- Spectrogram comparison
+
+**Key Components:**
+- `Task3GenericEqualizer.jsx` - Main generic equalizer interface
+- Frequency band management (add/remove/update subdivisions)
+- Configuration save/load system
+- Processing section with real-time progress
+
+**Use Cases:**
+- Custom EQ curves for specific needs
+- Testing specific frequency response
+- Educational demonstrations of frequency manipulation
+
+#### 🎸 Musical Instruments Mode
+**Location:** `frontend/dsp-tasks/src/tasks/task3/components/music/`
+
+**Features:**
+- Automatic detection and control of 6+ musical instruments
+- Pre-configured frequency ranges for each instrument:
+  - 🎹 **Piano**: 27.5 Hz - 4186 Hz (A0 - C8)
+  - 🎸 **Guitar**: 82.4 Hz - 1319 Hz (E2 - E6)
+  - 🥁 **Drums/Beat**: 40 Hz - 16000 Hz (includes cymbals)
+  - 🎺 **Trumpet**: 185 Hz - 1500 Hz
+  - 🎸 **Bass Guitar**: 41 Hz - 392 Hz (E1 - G4)
+  - 🎻 **Violin**: 196 Hz - 3136 Hz (G3 - G7)
+- Individual gain control per instrument (0.0x - 2.0x)
+- Real-time audio preview
+- Synthetic test signal generation
+
+**Key Components:**
+- `Task3MusicEqualizerNew.jsx` - Music equalizer interface
+- `INSTRUMENT_PRESETS` - Predefined instrument frequency ranges
+- Slider controls for each instrument
+
+**Use Cases:**
+- Mix balancing in music production
+- Isolate or emphasize specific instruments
+- Create instrument-focused remixes
+- Audio restoration and enhancement
+
+#### 🐾 Animal Sounds Mode
+**Location:** `frontend/dsp-tasks/src/tasks/task3/components/animals/`
+
+**Features:**
+- Detect and control 8+ animal vocalizations:
+  - 🐕 **Dog Bark**: 300 Hz - 4000 Hz
+  - 🐱 **Cat Meow**: 250 Hz - 4000 Hz
+  - 🐦 **Crow Caw**: 300 Hz - 5000 Hz
+  - 🐘 **Elephant Trumpet**: 400 Hz - 8000 Hz
+  - 🦌 **Elk Call**: 200 Hz - 4000 Hz
+  - 🦅 **Gull/Seagull**: 500 Hz - 4500 Hz
+  - 🐴 **Horse Neigh**: 200 Hz - 3500 Hz
+  - 🦉 **Owl Hoot**: 150 Hz - 800 Hz
+- Pre-configured frequency ranges for each animal sound
+- Individual gain control per animal type
+- Synthetic animal sound generation
+
+**Key Components:**
+- `Task3AnimalEqualizer.jsx` - Animal sounds equalizer
+- `ANIMAL_PRESETS` - Animal vocalization frequency data
+- Visual icon representation for each animal
+
+**Use Cases:**
+- Wildlife audio analysis
+- Nature sound mixing and enhancement
+- Educational animal sound demonstrations
+- Audio documentaries and nature films
+
+#### 🎤 Human Voices Mode
+**Location:** `frontend/dsp-tasks/src/tasks/task3/components/voices/`
+
+**Features:**
+- Analyze and control voice types with formant detection:
+  - 👨 **Male Speech**: 85 Hz - 180 Hz (fundamental frequency)
+  - 👩 **Female Speech**: 165 Hz - 255 Hz (fundamental frequency)
+  - 👶 **Child Voice**: 250 Hz - 400 Hz (fundamental frequency)
+  - **Vowel Formants**: F1, F2, F3 frequency ranges
+  - **Consonant Energy**: High-frequency speech components
+  - **Voice Harmonics**: Harmonic overtones
+- Language characteristics analysis
+- Voice type detection and isolation
+- Speech clarity enhancement
+
+**Key Components:**
+- `Task3VoiceEqualizer.jsx` - Voice equalizer interface
+- `VOICE_PRESETS` - Voice frequency characteristics
+- Formant frequency controls
+
+**Use Cases:**
+- Voice enhancement in recordings
+- Gender-specific voice processing
+- Podcast and interview audio cleanup
+- Speech therapy and analysis
+- Voice acting and character voices
+
+### Task 3 Shared Components
+
+**Location:** `frontend/dsp-tasks/src/tasks/task3/components/shared/`
+
+All equalizer modes share common visualization and control components:
+
+- **`AudioUpload.jsx`** - Audio file upload handler (WAV, MP3, OGG, WebM)
+- **`ProcessingSection.jsx`** - Equalizer controls and processing interface
+  - Frequency band sliders
+  - Gain controls (0.0x - 2.0x)
+  - Apply processing button
+  - Progress indication
+- **`DualSpectrumViewer.jsx`** - Side-by-side spectrum comparison
+  - Original signal spectrum (left)
+  - Processed signal spectrum (right)
+  - Frequency domain visualization
+  - Logarithmic frequency scale
+- **`CineSignalViewer.jsx`** - Synchronized time-domain playback
+  - Dual waveform display
+  - Synchronized scrolling
+  - Playback controls
+  - Zoom and pan capabilities
+- **`SpectrogramViewer.jsx`** - Time-frequency representation
+  - Before/after spectrogram comparison
+  - Color-coded frequency intensity
+  - Time evolution of frequency content
+
+### Task 3 Services
+
+**Location:** `frontend/dsp-tasks/src/tasks/task3/services/`
+
+Core signal processing functionality:
+
+- **`equalizerService.js`** - FFT-based equalizer engine
+  - `createSubdivision()` - Create frequency band
+  - `addSubdivision()` - Add band to configuration
+  - `removeSubdivision()` - Remove frequency band
+  - `updateSubdivision()` - Modify existing band
+  - `processSignalInChunks()` - Chunk-based FFT processing
+  - `applyEqualizer()` - Apply EQ to signal
+  - `saveConfig()` / `loadConfig()` - Configuration persistence
+  - `generateSyntheticSignal()` - Test signal generation
+
+- **`fftService.js`** - Fast Fourier Transform implementation
+  - FFT computation
+  - Inverse FFT
+  - Complex number operations
+  - Frequency bin calculations
+
+- **`audioService.js`** - Audio file handling
+  - Audio file decoding
+  - WAV file generation
+  - Sample rate conversion
+  - Audio buffer management
+
+### Task 3 Data & Presets
+
+**Location:** `frontend/dsp-tasks/src/tasks/task3/data/`
+
+- **`modePresets.js`** - Predefined frequency ranges
+  - `INSTRUMENT_PRESETS` - Musical instrument frequencies
+  - `ANIMAL_PRESETS` - Animal sound frequencies
+  - `VOICE_PRESETS` - Human voice characteristics
+
+- **`syntheticSignals.js`** - Test signal generators
+  - Musical scale signals
+  - Full-range test signals
+  - Instrument simulation
+  - Voice simulation
+  - Predefined frequency components
+
+### Task 3 Project Structure
+
+```
+frontend/dsp-tasks/src/tasks/task3/
+├── index.js                              # Task 3 module exports
+├── components/
+│   ├── Task3.jsx                         # Main task component with mode selection
+│   ├── Task3.css
+│   │
+│   ├── generic/                          # Generic Mode
+│   │   ├── Task3GenericEqualizer.jsx     # Custom frequency bands
+│   │   └── Task3GenericEqualizer.css
+│   │
+│   ├── music/                            # Musical Instruments Mode
+│   │   ├── Task3MusicEqualizerNew.jsx    # Instrument-specific EQ
+│   │   └── Task3MusicEqualizer.css
+│   │
+│   ├── animals/                          # Animal Sounds Mode
+│   │   └── Task3AnimalEqualizer.jsx      # Animal vocalization EQ
+│   │
+│   ├── voices/                           # Human Voices Mode
+│   │   └── Task3VoiceEqualizer.jsx       # Voice and formant control
+│   │
+│   └── shared/                           # Shared visualization components
+│       ├── AudioUpload.jsx               # Audio file upload
+│       ├── AudioUpload.css
+│       ├── ProcessingSection.jsx         # Equalizer controls
+│       ├── ProcessingSection.css
+│       ├── DualSpectrumViewer.jsx        # Before/after spectrum
+│       ├── DualSpectrumViewer.css
+│       ├── CineSignalViewer.jsx          # Synchronized waveforms
+│       ├── CineSignalViewer.css
+│       ├── SpectrogramViewer.jsx         # Time-frequency analysis
+│       └── SpectrogramViewer.css
+│
+├── data/
+│   ├── index.js
+│   ├── modePresets.js                    # Instrument/Animal/Voice presets
+│   └── syntheticSignals.js               # Test signal definitions
+│
+└── services/
+    ├── equalizerService.js               # Core EQ engine (FFT-based)
+    ├── fftService.js                     # FFT/IFFT implementation
+    └── audioService.js                   # Audio file handling
+```
+
+### Task 3 Key Concepts
+
+**Fast Fourier Transform (FFT):**
+- Converts time-domain signal to frequency domain
+- Enables frequency-specific manipulation
+- Efficient algorithm: O(N log N) complexity
+- Used for all equalization operations
+
+**Frequency Domain Processing:**
+- Identify frequency components in audio
+- Selective amplification/attenuation
+- Preserve phase relationships
+- Minimal artifacts when properly implemented
+
+**Equalization Principles:**
+- Subdivide frequency spectrum into bands
+- Apply gain to each band independently
+- Smooth transitions between bands
+- Maintain overall signal integrity
+
+**Inverse FFT (IFFT):**
+- Converts modified frequency data back to time domain
+- Reconstructs playable audio signal
+- Preserves temporal relationships
+
+**Chunked Processing:**
+- Process large files in manageable chunks
+- Prevents browser memory overflow
+- Enables progress indication
+- Maintains audio continuity across chunks
+
+**Preset Modes:**
+- Pre-configured frequency ranges for common use cases
+- Based on acoustic science and frequency analysis
+- Optimized for specific audio content types
+- Customizable gain per frequency band
+
+### Task 3 Workflow
+
+1. **Upload Audio** - Load audio file (WAV, MP3, OGG, WebM) or generate synthetic test signal
+2. **Select Mode** - Choose Generic, Music, Animals, or Voices mode
+3. **Adjust Frequencies** - Control gain (0.0x - 2.0x) for each frequency band/preset
+4. **Process** - Apply FFT-based equalization with real-time progress
+5. **Compare** - View before/after spectrums, waveforms, and spectrograms
+6. **Play & Download** - Listen to results and download processed audio
+
+### Task 3 Technical Features
+
+- **Browser-based FFT** - No backend required for processing
+- **Real-time visualization** - Instant spectrum and waveform updates
+- **Synchronized playback** - Linked viewers for before/after comparison
+- **Chunk processing** - Handle large files efficiently
+- **Configuration management** - Save/load custom EQ settings (Generic mode)
+- **Synthetic signals** - Built-in test signals for validation
+- **Responsive design** - Adaptive UI for different screen sizes
+- **Progress indication** - Visual feedback during processing
+
 ## Model Information
 
 All AI models are hosted on cloud infrastructure for:

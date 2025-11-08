@@ -1,0 +1,384 @@
+/**
+ * Task 3 Signal Equalizer - Modern Professional UI
+ * Fully integrated with index.css design system
+ * Theme-aware, responsive, and user-friendly
+ */
+
+/* ==================== Main Container ==================== */
+.task3-equalizer-container {
+    min-height: 100vh;
+    background: var(--bg-primary);
+    padding: var(--space-4);
+    transition: background var(--transition-normal);
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+/* ==================== Header Section ==================== */
+.task3-equalizer-header {
+    text-align: center;
+    padding: var(--space-8) var(--space-5);
+    background: var(--gradient-hero);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-6);
+    box-shadow: var(--shadow-md);
+    position: relative;
+    overflow: hidden;
+}
+
+.task3-equalizer-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 30% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+.task3-equalizer-header h1 {
+    font-size: var(--text-3xl);
+    font-weight: 800;
+    color: var(--text-inverse);
+    margin: 0 0 var(--space-2) 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    position: relative;
+    z-index: 1;
+}
+
+.task3-equalizer-subtitle {
+    font-size: var(--text-base);
+    color: var(--text-inverse);
+    margin: 0;
+    opacity: 0.95;
+    position: relative;
+    z-index: 1;
+    font-weight: 500;
+}
+
+/* ==================== Mode Selection Navigation ==================== */
+.task3-mode-selection {
+    background: var(--bg-secondary);
+    padding: var(--space-6);
+    border-radius: var(--radius-xl);
+    margin-bottom: var(--space-8);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-light);
+}
+
+.task3-mode-selection h2 {
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 var(--space-5) 0;
+    padding-bottom: var(--space-3);
+    border-bottom: 2px solid var(--primary);
+}
+
+.task3-equalizer-mode-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--space-4);
+}
+
+.task3-equalizer-nav-btn {
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.task3-equalizer-nav-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--gradient-primary);
+    opacity: 0;
+    transition: opacity var(--transition-normal);
+}
+
+.task3-equalizer-nav-btn:hover {
+    transform: translateY(-3px);
+    border-color: var(--primary);
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
+}
+
+.task3-equalizer-nav-btn.active {
+    border-color: var(--primary);
+    box-shadow: 0 8px 25px rgba(37, 99, 235, 0.4);
+    transform: translateY(-2px);
+}
+
+.task3-equalizer-nav-btn.active::before {
+    opacity: 1;
+}
+
+.task3-equalizer-nav-icon {
+    font-size: 2.5rem;
+    line-height: 1;
+    transition: transform var(--transition-fast);
+    position: relative;
+    z-index: 1;
+}
+
+.task3-equalizer-nav-btn:hover .task3-equalizer-nav-icon {
+    transform: scale(1.1);
+}
+
+.task3-equalizer-nav-btn.active .task3-equalizer-nav-icon {
+    filter: drop-shadow(0 2px 6px rgba(255, 255, 255, 0.3));
+}
+
+.task3-equalizer-nav-text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    width: 100%;
+    position: relative;
+    z-index: 1;
+}
+
+.task3-equalizer-nav-label {
+    font-size: var(--text-lg);
+    font-weight: 700;
+    color: var(--text-primary);
+    transition: color var(--transition-fast);
+}
+
+.task3-equalizer-nav-desc {
+    font-size: var(--text-sm);
+    color: var(--text-tertiary);
+    line-height: 1.4;
+    transition: color var(--transition-fast);
+}
+
+.task3-equalizer-nav-btn.active .task3-equalizer-nav-label,
+.task3-equalizer-nav-btn.active .task3-equalizer-nav-desc {
+    color: var(--text-inverse);
+}
+
+/* ==================== Main Content Area ==================== */
+.task3-equalizer-main-content {
+    min-height: 500px;
+    animation: fadeInContent 0.4s ease-out;
+}
+
+@keyframes fadeInContent {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ==================== Footer ==================== */
+.task3-equalizer-footer {
+    text-align: center;
+    padding: var(--space-6) var(--space-4);
+    margin-top: var(--space-10);
+    border-top: 1px solid var(--border-light);
+    color: var(--text-tertiary);
+    font-size: var(--text-sm);
+}
+
+.task3-equalizer-footer p {
+    margin: var(--space-2) 0;
+    line-height: 1.6;
+}
+
+/* ==================== Responsive Design ==================== */
+@media (max-width: 1024px) {
+    .task3-equalizer-mode-buttons {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .task3-equalizer-container {
+        padding: var(--space-3);
+    }
+
+    .task3-equalizer-header {
+        padding: var(--space-8) var(--space-4);
+        margin-bottom: var(--space-6);
+    }
+
+    .task3-equalizer-header h1 {
+        font-size: var(--text-3xl);
+    }
+
+    .task3-equalizer-subtitle {
+        font-size: var(--text-base);
+    }
+
+    .task3-equalizer-navbar {
+        padding: var(--space-4);
+        margin-bottom: var(--space-6);
+    }
+
+    .task3-equalizer-navbar h2 {
+        font-size: var(--text-xl);
+        margin-bottom: var(--space-4);
+    }
+
+    .task3-equalizer-mode-buttons {
+        grid-template-columns: 1fr;
+        gap: var(--space-3);
+    }
+
+    .task3-equalizer-nav-btn {
+        padding: var(--space-4);
+    }
+
+    .task3-equalizer-nav-icon {
+        font-size: 2rem;
+    }
+
+    .task3-equalizer-nav-label {
+        font-size: var(--text-base);
+    }
+}
+
+@media (max-width: 480px) {
+    .task3-equalizer-container {
+        padding: var(--space-2);
+    }
+
+    .task3-equalizer-header {
+        padding: var(--space-6) var(--space-3);
+    }
+
+    .task3-equalizer-header h1 {
+        font-size: var(--text-2xl);
+    }
+
+    .task3-equalizer-subtitle {
+        font-size: var(--text-sm);
+    }
+
+    .task3-equalizer-nav-icon {
+        font-size: 1.75rem;
+    }
+}
+
+/* ==================== Custom Scrollbar ==================== */
+.task3-equalizer-container * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary) var(--bg-tertiary);
+}
+
+.task3-equalizer-container *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.task3-equalizer-container *::-webkit-scrollbar-track {
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+}
+
+.task3-equalizer-container *::-webkit-scrollbar-thumb {
+    background: var(--border-medium);
+    border-radius: var(--radius-md);
+    transition: background var(--transition-fast);
+}
+
+.task3-equalizer-container *::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
+}
+
+/* ==================== Accessibility & Focus States ==================== */
+.task3-equalizer-nav-btn:focus {
+    outline: 3px solid var(--primary);
+    outline-offset: 2px;
+}
+
+.task3-equalizer-nav-btn:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* ==================== Loading States ==================== */
+.task3-equalizer-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    color: var(--text-secondary);
+    font-size: var(--text-lg);
+}
+
+/* ==================== Dark Mode Specific Enhancements ==================== */
+[data-theme="dark"] .task3-equalizer-nav-btn {
+    background: var(--bg-elevated);
+}
+
+[data-theme="dark"] .task3-equalizer-nav-btn:hover {
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
+}
+
+[data-theme="dark"] .task3-equalizer-nav-btn.active {
+    box-shadow: 0 8px 25px rgba(37, 99, 235, 0.5);
+}
+
+[data-theme="dark"] .task3-equalizer-header::before {
+    background: radial-gradient(circle at 30% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
+}
+
+/* ==================== Info Section ==================== */
+.task3-info-section {
+    background: var(--bg-secondary);
+    padding: var(--space-6);
+    border-radius: var(--radius-xl);
+    margin-bottom: var(--space-6);
+    box-shadow: var(--shadow-md);
+}
+
+.task3-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--space-4);
+}
+
+.task3-info-card {
+    background: var(--bg-tertiary);
+    padding: var(--space-5);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light);
+    transition: all var(--transition-normal);
+}
+
+.task3-info-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary);
+}
+
+.task3-info-card h3 {
+    font-size: var(--text-lg);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 var(--space-2) 0;
+}
+
+.task3-info-card p {
+    color: var(--text-secondary);
+    margin: 0;
+    font-size: var(--text-sm);
+    line-height: 1.6;
+}
