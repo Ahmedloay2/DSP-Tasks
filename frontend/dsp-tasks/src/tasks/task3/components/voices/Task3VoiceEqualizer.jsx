@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import AudioUpload from '../shared/AudioUpload';
-import ProcessingSection from '../shared/ProcessingSection';
 import DualSpectrumViewer from '../shared/DualSpectrumViewer';
 import CineSignalViewer from '../shared/CineSignalViewer';
 import SpectrogramViewer from '../shared/SpectrogramViewer';
@@ -12,18 +11,16 @@ import {
   updateSubdivision,
   processSignalInChunks,
 } from '../../services/equalizerService';
-import { signalToAudioUrl } from '../../services/audioService';
 import '../music/Task3MusicEqualizer.css';
 
 export default function Task3VoiceEqualizer() {
   // Refs for audio players
   const inputAudioRef = useRef(null);
-  const processedAudioRef = useRef(null);
-  
+
   // Signal state
   const [inputSignal, setInputSignal] = useState([]);
   const [outputSignal, setOutputSignal] = useState([]);
-  const [sampleRate] = useState(44100);
+  const [sampleRate, setSampleRate] = useState(44100);
   const [fileName, setFileName] = useState('');
   const [processedAudioUrl, setProcessedAudioUrl] = useState(null);
   const [inputAudioUrl, setInputAudioUrl] = useState(null);
@@ -31,7 +28,7 @@ export default function Task3VoiceEqualizer() {
   // Configuration state
   const [config, setConfig] = useState(null);
   const [voices, setVoices] = useState([]);
-  
+
   // UI state
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -70,28 +67,31 @@ export default function Task3VoiceEqualizer() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleAudioLoaded = async (audioData) => {
+  const handleAudioLoaded = (audioData) => {
     setInputSignal(audioData.signal);
+    setSampleRate(audioData.sampleRate);
     setFileName(audioData.fileName);
     setOutputSignal([]);
     setProcessedAudioUrl(null);
-    
-    if (config) {
-      config.sampleRate = sampleRate;
+
+    // Use the audioUrl from upload if available, otherwise create from signal
+    if (audioData.audioUrl) {
+      setInputAudioUrl(audioData.audioUrl);
+    } else {
+      const inputAudioUrl = signalToAudioUrl(audioData.signal, audioData.sampleRate);
+      setInputAudioUrl(inputAudioUrl);
     }
 
-    // Generate audio URL for original audio player
-    try {
-      const audioUrl = await signalToAudioUrl(audioData.signal, sampleRate);
-      setInputAudioUrl(audioUrl);
-    } catch (error) {
-      console.error('Error creating audio URL:', error);
+    // Update config with new sample rate
+    if (config) {
+      const updatedConfig = { ...config, sampleRate: audioData.sampleRate };
+      setConfig(updatedConfig);
     }
   };
 
   const handleLoadPresets = () => {
     const newConfig = createGenericMode(sampleRate);
-    
+
     // Add all voice frequency bands
     VOICE_PRESETS.forEach(preset => {
       addSubdivision(newConfig, preset.minFreq, preset.maxFreq, preset.gain);
@@ -113,8 +113,17 @@ export default function Task3VoiceEqualizer() {
 
   const handleProcess = async () => {
     if (inputSignal.length === 0 || !config) {
-      alert('Please load audio and instrument presets first!');
+      alert('Please load audio and voice presets first!');
       return;
+    }
+
+    // Warn for large files
+    const durationInSeconds = inputSignal.length / sampleRate;
+    if (durationInSeconds > 60) {
+      const proceed = window.confirm(
+        `This audio file is ${durationInSeconds.toFixed(1)} seconds long. Processing may take a significant amount of time and could make the browser unresponsive. Do you want to continue?`
+      );
+      if (!proceed) return;
     }
 
     setIsProcessing(true);
@@ -128,11 +137,11 @@ export default function Task3VoiceEqualizer() {
       );
 
       setOutputSignal(processed);
-      
+
       // Create audio URL
       const audioUrl = signalToAudioUrl(processed, sampleRate);
       setProcessedAudioUrl(audioUrl);
-      
+
       setIsProcessing(false);
     } catch (error) {
       console.error('Processing error:', error);
@@ -141,19 +150,69 @@ export default function Task3VoiceEqualizer() {
     }
   };
 
+  const signalToAudioUrl = (signal, sr) => {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const buffer = audioCtx.createBuffer(1, signal.length, sr);
+    const channelData = buffer.getChannelData(0);
+
+    for (let i = 0; i < signal.length; i++) {
+      channelData[i] = signal[i];
+    }
+
+    // Convert to WAV
+    const wav = audioBufferToWav(buffer);
+    const blob = new Blob([wav], { type: 'audio/wav' });
+    return URL.createObjectURL(blob);
+  };
+
+  const audioBufferToWav = (buffer) => {
+    const length = buffer.length * buffer.numberOfChannels * 2;
+    const arrayBuffer = new ArrayBuffer(44 + length);
+    const view = new DataView(arrayBuffer);
+
+    // Write WAV header
+    const writeString = (offset, string) => {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    };
+
+    writeString(0, 'RIFF');
+    view.setUint32(4, 36 + length, true);
+    writeString(8, 'WAVE');
+    writeString(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, buffer.numberOfChannels, true);
+    view.setUint32(24, buffer.sampleRate, true);
+    view.setUint32(28, buffer.sampleRate * buffer.numberOfChannels * 2, true);
+    view.setUint16(32, buffer.numberOfChannels * 2, true);
+    view.setUint16(34, 16, true);
+    writeString(36, 'data');
+    view.setUint32(40, length, true);
+
+    // Write audio data
+    let offset = 44;
+    for (let i = 0; i < buffer.length; i++) {
+      for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+        const sample = Math.max(-1, Math.min(1, buffer.getChannelData(channel)[i]));
+        view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+        offset += 2;
+      }
+    }
+
+    return arrayBuffer;
+  };
+
   const handleReset = () => {
     setOutputSignal([]);
     setProcessedAudioUrl(null);
     setProgress(0);
-    
-    // Stop and reset audio players
+
+    // Stop and reset audio players - only input audio ref
     if (inputAudioRef.current) {
       inputAudioRef.current.pause();
       inputAudioRef.current.currentTime = 0;
-    }
-    if (processedAudioRef.current) {
-      processedAudioRef.current.pause();
-      processedAudioRef.current.currentTime = 0;
     }
   };
 
@@ -174,16 +233,6 @@ export default function Task3VoiceEqualizer() {
         fileName={fileName}
         mode="voice"
       />
-
-      {/* Original Audio Player */}
-      {inputAudioUrl && (
-        <section className="audio-player-section">
-          <h3>Original Audio</h3>
-          <audio ref={inputAudioRef} controls src={inputAudioUrl} className="audio-player">
-            Your browser does not support the audio element.
-          </audio>
-        </section>
-      )}
 
       {/* Control Panel */}
       <section className="control-panel">
@@ -233,18 +282,66 @@ export default function Task3VoiceEqualizer() {
 
       {/* Processing Section */}
       {inputSignal.length > 0 && (
-        <ProcessingSection
-          onProcess={handleProcess}
-          onReset={handleReset}
-          onDownload={handleDownload}
-          processedAudio={processedAudioUrl}
-          isProcessing={isProcessing}
-          progress={progress}
-          audioRef={processedAudioRef}
-        />
+        <section className="processing-section-inline">
+          <div className="process-controls">
+            <button
+              className="process-btn"
+              onClick={handleProcess}
+              disabled={isProcessing}
+            >
+              <span className="icon">⚡</span>
+              {isProcessing ? 'Processing...' : 'Apply Equalizer'}
+            </button>
+            <button className="secondary-btn" onClick={handleReset}>
+              🔄 Reset
+            </button>
+            {processedAudioUrl && !isProcessing && (
+              <button className="download-btn" onClick={handleDownload}>
+                💾 Download
+              </button>
+            )}
+          </div>
+
+          {isProcessing && (
+            <div className="progress-bar">
+              <div className="progress-fill" style={{ width: `${progress * 100}%` }}></div>
+              <span className="progress-text">Processing... {Math.round(progress * 100)}%</span>
+            </div>
+          )}
+        </section>
       )}
 
-      {/* Dual Spectrum Viewer */}
+      {/* Linked Cine Signal Viewers */}
+      {inputSignal.length > 0 && (
+        <div className="linked-viewers-section">
+          <h2>Time-Domain Signal Analysis (Linked & Synchronized)</h2>
+          <div className="viewers-grid">
+            <div className="viewer-with-audio">
+              <CineSignalViewer
+                signal={inputSignal}
+                sampleRate={sampleRate}
+                title="Input Signal"
+                audioUrl={inputAudioUrl}
+                linkedViewerState={linkedViewerState}
+                onViewStateChange={handleViewStateChange}
+                cursorFollowOnly={true}
+              />
+            </div>
+            <div className="viewer-with-audio">
+              <CineSignalViewer
+                signal={outputSignal}
+                sampleRate={sampleRate}
+                title="Output Signal (Processed)"
+                audioUrl={processedAudioUrl}
+                linkedViewerState={linkedViewerState}
+                onViewStateChange={handleViewStateChange}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Dual Spectrum Viewer - Only show when there's input signal */}
       {inputSignal.length > 0 && (
         <DualSpectrumViewer
           originalSignal={inputSignal}
@@ -253,70 +350,34 @@ export default function Task3VoiceEqualizer() {
         />
       )}
 
-      {/* Linked Cine Signal Viewers */}
+      {/* Spectrograms with Toggle */}
       {inputSignal.length > 0 && (
-        <section className="linked-viewers-section">
-          <h3>Linked Signal Cine Viewers (Synchronized)</h3>
-          <div className="viewers-container">
-            <div className="viewer-wrapper">
-              <h4>Input Signal</h4>
-              <CineSignalViewer
-                signal={inputSignal}
-                sampleRate={sampleRate}
-                title="Input Signal"
-                audioUrl={inputAudioUrl}
-                linkedViewerState={linkedViewerState}
-                onViewStateChange={handleViewStateChange}
-              />
-            </div>
-            <div className="viewer-wrapper">
-              <h4>Output Signal (Processed)</h4>
-              <CineSignalViewer
-                signal={outputSignal.length > 0 ? outputSignal : inputSignal}
-                sampleRate={sampleRate}
-                title="Output Signal"
-                audioUrl={processedAudioUrl}
-                linkedViewerState={linkedViewerState}
-                onViewStateChange={handleViewStateChange}
-              />
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Spectrograms Section */}
-      {inputSignal.length > 0 && (
-        <section className="spectrograms-section">
+        <div className="spectrograms-section">
           <div className="section-header">
-            <h3>Spectrograms (Time-Frequency Analysis)</h3>
+            <h2>Spectrograms (Time-Frequency Analysis)</h2>
             <button
               className="toggle-btn"
               onClick={() => setShowSpectrograms(!showSpectrograms)}
             >
-              {showSpectrograms ? 'Hide' : 'Show'} Spectrograms
+              {showSpectrograms ? '👁️ Hide' : '👁️ Show'} Spectrograms
             </button>
           </div>
+
           {showSpectrograms && (
-            <div className="spectrograms-container">
-              <div className="spectrogram-wrapper">
-                <h4>Input Signal Spectrogram</h4>
-                <SpectrogramViewer
-                  signal={inputSignal}
-                  sampleRate={sampleRate}
-                  title="Input Spectrogram"
-                />
-              </div>
-              <div className="spectrogram-wrapper">
-                <h4>Output Signal Spectrogram</h4>
-                <SpectrogramViewer
-                  signal={outputSignal.length > 0 ? outputSignal : inputSignal}
-                  sampleRate={sampleRate}
-                  title="Output Spectrogram"
-                />
-              </div>
+            <div className="spectrograms-grid">
+              <SpectrogramViewer
+                signal={inputSignal}
+                sampleRate={sampleRate}
+                title="Input Spectrogram"
+              />
+              <SpectrogramViewer
+                signal={outputSignal.length > 0 ? outputSignal : inputSignal}
+                sampleRate={sampleRate}
+                title="Output Spectrogram"
+              />
             </div>
           )}
-        </section>
+        </div>
       )}
     </div>
   );

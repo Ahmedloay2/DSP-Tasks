@@ -109,8 +109,11 @@ export function applyEqualizer(complexSignal, config) {
   const N = complexSignal.length;
   const sampleRate = config.sampleRate;
 
-  // Create a copy of the complex signal
-  const modified = complexSignal.map(c => new Complex(c.real, c.imag));
+  // Create a copy of the complex signal (more efficient than map)
+  const modified = new Array(N);
+  for (let i = 0; i < N; i++) {
+    modified[i] = new Complex(complexSignal[i].real, complexSignal[i].imag);
+  }
 
   // Apply each subdivision's scaling
   for (const subdivision of config.subdivisions) {
@@ -121,18 +124,20 @@ export function applyEqualizer(complexSignal, config) {
     startBin = Math.max(0, Math.min(startBin, N / 2));
     endBin = Math.max(0, Math.min(endBin, N / 2));
 
+    const scale = subdivision.scale;
+
     // Apply scaling to positive frequencies
     for (let i = startBin; i <= endBin; i++) {
-      modified[i].real *= subdivision.scale;
-      modified[i].imag *= subdivision.scale;
+      modified[i].real *= scale;
+      modified[i].imag *= scale;
     }
 
     // Apply scaling to negative frequencies (mirror)
     for (let i = startBin; i <= endBin; i++) {
       if (i > 0 && i < N) {
         const mirrorIndex = N - i;
-        modified[mirrorIndex].real *= subdivision.scale;
-        modified[mirrorIndex].imag *= subdivision.scale;
+        modified[mirrorIndex].real *= scale;
+        modified[mirrorIndex].imag *= scale;
       }
     }
   }
@@ -147,6 +152,11 @@ export function applyEqualizer(complexSignal, config) {
  * @returns {Array} Processed signal (time domain)
  */
 export function processSignal(signal, config) {
+  // Early return if no subdivisions
+  if (!config.subdivisions || config.subdivisions.length === 0) {
+    return signal.slice();
+  }
+
   // Pad to power of 2
   const paddedSize = Math.pow(2, Math.ceil(Math.log2(signal.length)));
   const paddedSignal = new Array(paddedSize).fill(0);
@@ -164,7 +174,12 @@ export function processSignal(signal, config) {
   const timeDomain = ifft(modified);
 
   // Extract real part and return only the original length
-  return timeDomain.slice(0, signal.length).map(c => c.real);
+  const result = new Array(signal.length);
+  for (let i = 0; i < signal.length; i++) {
+    result[i] = timeDomain[i].real;
+  }
+
+  return result;
 }
 
 /**
@@ -175,7 +190,7 @@ export function processSignal(signal, config) {
  * @returns {Promise<Array>} Processed signal
  */
 export async function processSignalInChunks(signal, config, progressCallback = null) {
-  const chunkSize = 32768; // 32K samples (power of 2)
+  const chunkSize = 131072; // 128K samples (increased from 32K for better performance)
   const totalSamples = signal.length;
   const numChunks = Math.ceil(totalSamples / chunkSize);
 
@@ -195,12 +210,22 @@ export async function processSignalInChunks(signal, config, progressCallback = n
       progressCallback((i + 1) / numChunks);
     }
 
-    // Allow UI to update
-    await new Promise(resolve => setTimeout(resolve, 10));
+    // Yield to UI less frequently (only every 5 chunks or at end)
+    if (i % 5 === 0 || i === numChunks - 1) {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    }
   }
 
-  // Combine chunks
-  return processedChunks.flat();
+  // Combine chunks more efficiently
+  const result = new Array(totalSamples);
+  let offset = 0;
+  for (const chunk of processedChunks) {
+    for (let i = 0; i < chunk.length; i++) {
+      result[offset++] = chunk[i];
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -215,42 +240,36 @@ export function analyzeSpectrum(signal, sampleRate) {
     return { frequencies: [], magnitudes: [] };
   }
 
-  // Performance optimization: limit FFT size for large signals
-  // Max FFT size: 65536 (2^16) for good frequency resolution without freezing
-  const MAX_FFT_SIZE = 65536;
-  let workingSignal = signal;
-  
-  // If signal is too long, downsample by taking evenly spaced samples
-  if (signal.length > MAX_FFT_SIZE) {
-    const decimationFactor = Math.ceil(signal.length / MAX_FFT_SIZE);
-    workingSignal = [];
-    for (let i = 0; i < signal.length; i += decimationFactor) {
-      workingSignal.push(signal[i]);
+  // Limit signal size for performance (downsample if necessary)
+  let processSignal = signal;
+  const maxSamples = 65536; // 64K samples max for spectrum analysis
+  if (signal.length > maxSamples) {
+    const step = Math.ceil(signal.length / maxSamples);
+    processSignal = [];
+    for (let i = 0; i < signal.length; i += step) {
+      processSignal.push(signal[i]);
     }
   }
 
-  // Pad to power of 2 (limited to MAX_FFT_SIZE)
-  const targetSize = Math.min(MAX_FFT_SIZE, Math.pow(2, Math.ceil(Math.log2(workingSignal.length))));
-  const paddedSignal = new Array(targetSize).fill(0);
-  for (let i = 0; i < Math.min(workingSignal.length, targetSize); i++) {
-    paddedSignal[i] = workingSignal[i];
+  // Pad to power of 2
+  const paddedSize = Math.pow(2, Math.ceil(Math.log2(processSignal.length)));
+  const paddedSignal = new Array(paddedSize).fill(0);
+  for (let i = 0; i < processSignal.length; i++) {
+    paddedSignal[i] = processSignal[i];
   }
 
   const freqDomain = fft(paddedSignal);
   const N = freqDomain.length;
   const halfN = Math.floor(N / 2);
 
-  const frequencies = [];
-  const magnitudes = [];
+  const frequencies = new Array(halfN);
+  const magnitudes = new Array(halfN);
 
   for (let i = 0; i < halfN; i++) {
-    const freq = (i * sampleRate) / N;
-    const magnitude = Math.sqrt(
-      freqDomain[i].real * freqDomain[i].real + 
-      freqDomain[i].imag * freqDomain[i].imag
-    );
-    frequencies.push(freq);
-    magnitudes.push(magnitude);
+    frequencies[i] = (i * sampleRate) / N;
+    const real = freqDomain[i].real;
+    const imag = freqDomain[i].imag;
+    magnitudes[i] = Math.sqrt(real * real + imag * imag);
   }
 
   return { frequencies, magnitudes };

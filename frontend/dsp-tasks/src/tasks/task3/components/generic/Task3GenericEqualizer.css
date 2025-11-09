@@ -332,6 +332,36 @@
   font-weight: 500;
 }
 
+.frequency-input-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.frequency-input {
+  flex: 1;
+  padding: 12px;
+  background: var(--bg-tertiary, #334155);
+  border: 1px solid var(--border-color, #475569);
+  border-radius: 8px;
+  color: var(--text-primary, #f1f5f9);
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.frequency-input:focus {
+  outline: none;
+  border-color: var(--primary-color, #6366f1);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.input-unit {
+  color: var(--text-secondary, #cbd5e1);
+  font-weight: 500;
+  min-width: 30px;
+}
+
 .form-group input[type="text"],
 .form-group input[type="number"] {
   width: 100%;
@@ -443,9 +473,106 @@
 
 /* Responsive */
 @media (max-width: 1200px) {
+
   .viewers-grid,
   .spectrograms-grid {
     grid-template-columns: 1fr;
   }
 }
 
+/* Processing Section Inline */
+.processing-section-inline {
+  background: var(--bg-secondary, #1e293b);
+  padding: 20px 30px;
+  border-radius: 15px;
+  margin-bottom: 30px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+}
+
+.process-controls {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.process-btn {
+  background: var(--primary-color, #6366f1);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  font-weight: 500;
+  font-family: inherit;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.process-btn:hover:not(:disabled) {
+  background: var(--primary-dark, #4f46e5);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(99, 102, 241, 0.4);
+}
+
+.process-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.process-btn .icon {
+  font-size: 1.2em;
+}
+
+.download-btn {
+  background: var(--success-color, #10b981);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  font-weight: 500;
+  font-family: inherit;
+  transition: all 0.3s ease;
+}
+
+.download-btn:hover {
+  background: #059669;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
+}
+
+.progress-bar {
+  margin-top: 20px;
+  position: relative;
+  height: 30px;
+  background: var(--bg-tertiary, #334155);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6366f1, #10b981);
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.viewer-with-audio {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}

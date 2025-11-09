@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import AudioUpload from '../shared/AudioUpload';
-import ProcessingSection from '../shared/ProcessingSection';
 import DualSpectrumViewer from '../shared/DualSpectrumViewer';
 import CineSignalViewer from '../shared/CineSignalViewer';
 import SpectrogramViewer from '../shared/SpectrogramViewer';
@@ -20,8 +19,7 @@ import './Task3GenericEqualizer.css';
 export default function Task3GenericEqualizer() {
   // Refs for audio players
   const inputAudioRef = useRef(null);
-  const processedAudioRef = useRef(null);
-  
+
   // Signal state
   const [inputSignal, setInputSignal] = useState([]);
   const [outputSignal, setOutputSignal] = useState([]);
@@ -32,14 +30,14 @@ export default function Task3GenericEqualizer() {
 
   // Configuration state
   const [config, setConfig] = useState(null);
-  
+
   // UI state
   const [showModal, setShowModal] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [configName, setConfigName] = useState('');
   const [showSpectrograms, setShowSpectrograms] = useState(false);
-  
+
   // Linked viewer state for synchronization
   const [linkedViewerState, setLinkedViewerState] = useState({
     zoom: 1.0,
@@ -68,25 +66,44 @@ export default function Task3GenericEqualizer() {
     });
   }, []);
 
-  // Initialize with empty config (0 sliders)
+  // Initialize with empty config (0 sliders) - only run once on mount
   useEffect(() => {
     const initialConfig = createGenericMode(sampleRate);
     setConfig(initialConfig);
-  }, [sampleRate]);
+  }, []); // Empty dependency array - only run once
 
   const handleAudioLoaded = (audioData) => {
+    console.log('=== Audio Loaded ===');
+    console.log('Audio sample rate:', audioData.sampleRate);
+    console.log('Current sampleRate state:', sampleRate);
+    console.log('Current config:', config);
+
     setInputSignal(audioData.signal);
     setSampleRate(audioData.sampleRate);
     setFileName(audioData.fileName);
     setOutputSignal([]);
     setProcessedAudioUrl(null);
-    
-    // Create audio URL for input signal
-    const inputAudioUrl = signalToAudioUrl(audioData.signal, audioData.sampleRate);
-    setInputAudioUrl(inputAudioUrl);
-    
+
+    // Use the audioUrl from upload if available, otherwise create from signal
+    if (audioData.audioUrl) {
+      setInputAudioUrl(audioData.audioUrl);
+    } else {
+      const inputAudioUrl = signalToAudioUrl(audioData.signal, audioData.sampleRate);
+      setInputAudioUrl(inputAudioUrl);
+    }
+
+    // Update config with new sample rate WITHOUT losing subdivisions
     if (config) {
-      config.sampleRate = audioData.sampleRate;
+      const updatedConfig = {
+        ...config,
+        sampleRate: audioData.sampleRate
+      };
+      console.log('Updated config:', updatedConfig);
+      setConfig(updatedConfig);
+    } else {
+      console.warn('Config is null! Creating new config with audio sample rate');
+      const newConfig = createGenericMode(audioData.sampleRate);
+      setConfig(newConfig);
     }
   };
 
@@ -94,12 +111,12 @@ export default function Task3GenericEqualizer() {
     const frequencies = [100, 300, 500, 1000, 2000, 4000, 8000];
     const amplitudes = [1.0, 0.8, 1.0, 0.9, 0.7, 0.8, 0.6];
     const signal = generateSyntheticSignal(frequencies, amplitudes, sampleRate, 3.0);
-    
+
     setInputSignal(signal);
     setFileName('Synthetic Test Signal');
     setOutputSignal([]);
     setProcessedAudioUrl(null);
-    
+
     // Create audio URL for synthetic signal
     const inputAudioUrl = signalToAudioUrl(signal, sampleRate);
     setInputAudioUrl(inputAudioUrl);
@@ -109,6 +126,24 @@ export default function Task3GenericEqualizer() {
     if (inputSignal.length === 0 || !config) {
       alert('Please load audio first!');
       return;
+    }
+
+    // Debug logging
+    console.log('=== Processing Debug Info ===');
+    console.log('Input signal length:', inputSignal.length);
+    console.log('Sample rate state:', sampleRate);
+    console.log('Config sample rate:', config.sampleRate);
+    console.log('Duration (input):', inputSignal.length / sampleRate, 'seconds');
+
+    // Warn for very large files
+    const durationInSeconds = inputSignal.length / sampleRate;
+    if (durationInSeconds > 60) {
+      const proceed = window.confirm(
+        `This audio file is ${Math.round(durationInSeconds)} seconds long. ` +
+        `Processing may take some time and could slow down your browser. ` +
+        `Do you want to continue?`
+      );
+      if (!proceed) return;
     }
 
     setIsProcessing(true);
@@ -121,12 +156,15 @@ export default function Task3GenericEqualizer() {
         (p) => setProgress(p)
       );
 
+      console.log('Processed signal length:', processed.length);
+      console.log('Duration (output):', processed.length / sampleRate, 'seconds');
+
       setOutputSignal(processed);
-      
+
       // Create audio URL
       const audioUrl = signalToAudioUrl(processed, sampleRate);
       setProcessedAudioUrl(audioUrl);
-      
+
       setIsProcessing(false);
     } catch (error) {
       console.error('Processing error:', error);
@@ -136,13 +174,23 @@ export default function Task3GenericEqualizer() {
   };
 
   const signalToAudioUrl = (signal, sr) => {
+    console.log('Creating audio URL with sample rate:', sr);
+    console.log('Signal length:', signal.length);
+    console.log('Expected duration:', signal.length / sr, 'seconds');
+
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
     const buffer = audioCtx.createBuffer(1, signal.length, sr);
     const channelData = buffer.getChannelData(0);
-    
+
     for (let i = 0; i < signal.length; i++) {
       channelData[i] = signal[i];
     }
+
+    console.log('AudioBuffer created:');
+    console.log('- Sample rate:', buffer.sampleRate);
+    console.log('- Length:', buffer.length);
+    console.log('- Duration:', buffer.duration, 'seconds');
 
     // Convert to WAV
     const wav = audioBufferToWav(buffer);
@@ -193,15 +241,11 @@ export default function Task3GenericEqualizer() {
     setOutputSignal([]);
     setProcessedAudioUrl(null);
     setProgress(0);
-    
-    // Stop and reset audio players
+
+    // Stop and reset audio players - only input audio ref
     if (inputAudioRef.current) {
       inputAudioRef.current.pause();
       inputAudioRef.current.currentTime = 0;
-    }
-    if (processedAudioRef.current) {
-      processedAudioRef.current.pause();
-      processedAudioRef.current.currentTime = 0;
     }
   };
 
@@ -216,17 +260,17 @@ export default function Task3GenericEqualizer() {
 
   const handleAddBand = (startFreq, endFreq, scale) => {
     // Check for overlapping or duplicate frequency ranges
-    const isDuplicate = config.subdivisions.some(sub => 
+    const isDuplicate = config.subdivisions.some(sub =>
       (startFreq >= sub.startFreq && startFreq < sub.endFreq) ||
       (endFreq > sub.startFreq && endFreq <= sub.endFreq) ||
       (startFreq <= sub.startFreq && endFreq >= sub.endFreq)
     );
-    
+
     if (isDuplicate) {
       alert('This frequency range overlaps with an existing band. Please choose a different range.');
       return;
     }
-    
+
     const newConfig = { ...config };
     addSubdivision(newConfig, startFreq, endFreq, scale);
     setConfig(newConfig);
@@ -242,7 +286,7 @@ export default function Task3GenericEqualizer() {
   const handleUpdateBand = (index, field, value) => {
     const newConfig = { ...config };
     const sub = newConfig.subdivisions[index];
-    
+
     if (field === 'startFreq') {
       updateSubdivision(newConfig, index, parseFloat(value), sub.endFreq, sub.scale);
     } else if (field === 'endFreq') {
@@ -250,7 +294,7 @@ export default function Task3GenericEqualizer() {
     } else if (field === 'scale') {
       updateSubdivision(newConfig, index, sub.startFreq, sub.endFreq, parseFloat(value));
     }
-    
+
     setConfig(newConfig);
   };
 
@@ -264,12 +308,12 @@ export default function Task3GenericEqualizer() {
     const jsonString = saveConfig(config, configName);
     const blob = new Blob([jsonString], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
-    
+
     const a = document.createElement('a');
     a.href = url;
     a.download = `${configName}.json`;
     a.click();
-    
+
     URL.revokeObjectURL(url);
   };
 
@@ -301,16 +345,6 @@ export default function Task3GenericEqualizer() {
         mode="generic"
       />
 
-      {/* Original Audio Player */}
-      {inputAudioUrl && (
-        <section className="audio-player-section">
-          <h3>Original Audio</h3>
-          <audio ref={inputAudioRef} controls src={inputAudioUrl} className="audio-player">
-            Your browser does not support the audio element.
-          </audio>
-        </section>
-      )}
-
       {/* Control Panel */}
       <section className="control-panel">
         <h2>Generic Mode - Custom Frequency Bands</h2>
@@ -327,8 +361,8 @@ export default function Task3GenericEqualizer() {
                   <span className="subdivision-title">
                     Band {index + 1}: {sub.startFreq} Hz - {sub.endFreq} Hz
                   </span>
-                  <button 
-                    className="remove-btn" 
+                  <button
+                    className="remove-btn"
                     onClick={() => handleRemoveBand(index)}
                     title="Remove this band"
                   >
@@ -366,15 +400,63 @@ export default function Task3GenericEqualizer() {
 
       {/* Processing Section */}
       {inputSignal.length > 0 && (
-        <ProcessingSection
-          onProcess={handleProcess}
-          onReset={handleReset}
-          onDownload={handleDownload}
-          processedAudio={processedAudioUrl}
-          isProcessing={isProcessing}
-          progress={progress}
-          audioRef={processedAudioRef}
-        />
+        <section className="processing-section-inline">
+          <div className="process-controls">
+            <button
+              className="process-btn"
+              onClick={handleProcess}
+              disabled={isProcessing}
+            >
+              <span className="icon">⚡</span>
+              {isProcessing ? 'Processing...' : 'Apply Equalizer'}
+            </button>
+            <button className="secondary-btn" onClick={handleReset}>
+              🔄 Reset
+            </button>
+            {processedAudioUrl && !isProcessing && (
+              <button className="download-btn" onClick={handleDownload}>
+                💾 Download
+              </button>
+            )}
+          </div>
+
+          {isProcessing && (
+            <div className="progress-bar">
+              <div className="progress-fill" style={{ width: `${progress * 100}%` }}></div>
+              <span className="progress-text">Processing... {Math.round(progress * 100)}%</span>
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* Linked Cine Signal Viewers */}
+      {inputSignal.length > 0 && (
+        <div className="linked-viewers-section">
+          <h2>Time-Domain Signal Analysis (Linked & Synchronized)</h2>
+          <div className="viewers-grid">
+            <div className="viewer-with-audio">
+              <CineSignalViewer
+                signal={inputSignal}
+                sampleRate={sampleRate}
+                title="Input Signal"
+                audioUrl={inputAudioUrl}
+                linkedViewerState={linkedViewerState}
+                onViewStateChange={handleViewStateChange}
+                cursorFollowOnly={true}
+              />
+            </div>
+            <div className="viewer-with-audio">
+              <CineSignalViewer
+                signal={outputSignal}
+                sampleRate={sampleRate}
+                title="Output Signal (Processed)"
+                audioUrl={processedAudioUrl}
+                linkedViewerState={linkedViewerState}
+                onViewStateChange={handleViewStateChange}
+              />
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Dual Spectrum Viewer - Only show when there's input signal */}
@@ -386,44 +468,19 @@ export default function Task3GenericEqualizer() {
         />
       )}
 
-      {/* Linked Cine Signal Viewers */}
-      {inputSignal.length > 0 && (
-        <div className="linked-viewers-section">
-          <h2>Time-Domain Signal Viewers (Linked & Synchronized)</h2>
-          <div className="viewers-grid">
-            <CineSignalViewer
-              signal={inputSignal}
-              sampleRate={sampleRate}
-              title="Input Signal"
-              audioUrl={inputAudioUrl}
-              linkedViewerState={linkedViewerState}
-              onViewStateChange={handleViewStateChange}
-            />
-            <CineSignalViewer
-              signal={outputSignal}
-              sampleRate={sampleRate}
-              title="Output Signal"
-              audioUrl={processedAudioUrl}
-              linkedViewerState={linkedViewerState}
-              onViewStateChange={handleViewStateChange}
-            />
-          </div>
-        </div>
-      )}
-
       {/* Spectrograms with Toggle */}
       {inputSignal.length > 0 && (
         <div className="spectrograms-section">
           <div className="section-header">
             <h2>Spectrograms (Time-Frequency Analysis)</h2>
-            <button 
-              className="toggle-btn" 
+            <button
+              className="toggle-btn"
               onClick={() => setShowSpectrograms(!showSpectrograms)}
             >
               {showSpectrograms ? '👁️ Hide' : '👁️ Show'} Spectrograms
             </button>
           </div>
-          
+
           {showSpectrograms && (
             <div className="spectrograms-grid">
               <SpectrogramViewer
@@ -487,13 +544,32 @@ function BandModal({ onClose, onAdd }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     if (startFreq >= endFreq) {
       alert('Start frequency must be less than end frequency');
       return;
     }
-    
+
+    if (startFreq < 0 || endFreq < 0 || startFreq > 20000 || endFreq > 20000) {
+      alert('Frequency values must be between 0 and 20000 Hz');
+      return;
+    }
+
     onAdd(startFreq, endFreq, scale);
+  };
+
+  const handleStartFreqInputChange = (e) => {
+    const value = parseFloat(e.target.value);
+    if (!isNaN(value)) {
+      setStartFreq(Math.max(0, Math.min(20000, value)));
+    }
+  };
+
+  const handleEndFreqInputChange = (e) => {
+    const value = parseFloat(e.target.value);
+    if (!isNaN(value)) {
+      setEndFreq(Math.max(0, Math.min(20000, value)));
+    }
   };
 
   return (
@@ -505,6 +581,19 @@ function BandModal({ onClose, onAdd }) {
             <label>
               Start Frequency: <span className="slider-value">{startFreq} Hz</span>
             </label>
+            <div className="frequency-input-group">
+              <input
+                type="number"
+                min="0"
+                max="20000"
+                step="1"
+                value={startFreq}
+                onChange={handleStartFreqInputChange}
+                className="frequency-input"
+                placeholder="Enter frequency in Hz"
+              />
+              <span className="input-unit">Hz</span>
+            </div>
             <div className="slider-container">
               <span className="slider-label">0 Hz</span>
               <input
@@ -523,6 +612,19 @@ function BandModal({ onClose, onAdd }) {
             <label>
               End Frequency: <span className="slider-value">{endFreq} Hz</span>
             </label>
+            <div className="frequency-input-group">
+              <input
+                type="number"
+                min="0"
+                max="20000"
+                step="1"
+                value={endFreq}
+                onChange={handleEndFreqInputChange}
+                className="frequency-input"
+                placeholder="Enter frequency in Hz"
+              />
+              <span className="input-unit">Hz</span>
+            </div>
             <div className="slider-container">
               <span className="slider-label">0 Hz</span>
               <input

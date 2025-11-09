@@ -2,87 +2,121 @@
  * Audio Upload Component
  * Handles audio file upload and synthetic signal generation
  */
-import React, { useRef, useState } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import './AudioUpload.css';
 
 export default function AudioUpload({ onAudioLoaded, fileName, onGenerateSignal, mode }) {
   const fileInputRef = useRef(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [isUploading, setIsUploading] = useState(false);
+  const currentFileRef = useRef(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    setIsUploading(true);
-    setUploadProgress(0);
+    // Check file type
+    if (!file.type.startsWith('audio/')) {
+      alert('Please select a valid audio file.');
+      return;
+    }
+
+    setIsLoading(true);
+    setLoadingProgress(0);
 
     try {
-      // Step 1: Read file (0-30%)
-      setUploadProgress(10);
       const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      
-      setUploadProgress(20);
-      const arrayBuffer = await file.arrayBuffer();
-      
-      setUploadProgress(30);
-      
-      // Step 2: Decode audio (30-70%)
-      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-      setUploadProgress(70);
 
-      const duration = audioBuffer.duration;
-      const MAX_DURATION = 60; // 1 minute limit for performance
-      
-      // Warn user about long files
-      if (duration > MAX_DURATION) {
-        setIsUploading(false);
-        setUploadProgress(0);
-        
-        const shouldContinue = confirm(
-          `⚠️ Warning: This audio is ${duration.toFixed(1)} seconds (${(duration/60).toFixed(1)} minutes).\n\n` +
-          `For best performance, we recommend files under ${MAX_DURATION} seconds.\n\n` +
-          `Long files may cause the application to slow down or freeze.\n\n` +
-          `Continue loading this file?`
-        );
-        
-        if (!shouldContinue) {
-          e.target.value = ''; // Reset file input
-          return;
-        }
-        
-        setIsUploading(true);
-        setUploadProgress(70);
+      // Show progress for file reading
+      setLoadingProgress(10);
+      const arrayBuffer = await file.arrayBuffer();
+
+      setLoadingProgress(30);
+
+      // Decode audio data
+      let audioBuffer;
+      try {
+        audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        setLoadingProgress(60);
+      } catch (decodeError) {
+        console.error('Decode error:', decodeError);
+        alert('Error decoding audio file. Please ensure the file is a valid audio format (MP3, WAV, etc.).');
+        setIsLoading(false);
+        return;
       }
 
-      // Step 3: Extract signal (70-90%)
-      setUploadProgress(80);
+      // Extract mono signal in chunks to avoid freezing
       const channelData = audioBuffer.getChannelData(0);
-      const signal = Array.from(channelData);
-      
-      setUploadProgress(90);
+      const totalSamples = channelData.length;
 
-      // Step 4: Complete (90-100%)
+      // For very large files, downsample to prevent memory issues
+      const maxSamples = 10 * 1024 * 1024; // 10 million samples max (~3.8 minutes at 44.1kHz)
+      let signal;
+      let effectiveSampleRate = audioBuffer.sampleRate;
+
+      if (totalSamples > maxSamples) {
+        // Downsample
+        const downsampleRatio = Math.ceil(totalSamples / maxSamples);
+        signal = new Array(Math.ceil(totalSamples / downsampleRatio));
+
+        for (let i = 0; i < signal.length; i++) {
+          signal[i] = channelData[i * downsampleRatio];
+
+          // Update progress periodically
+          if (i % 100000 === 0) {
+            setLoadingProgress(60 + (i / signal.length) * 30);
+            // Allow UI to update
+            await new Promise(resolve => setTimeout(resolve, 0));
+          }
+        }
+
+        // Adjust sample rate for downsampled signal
+        effectiveSampleRate = audioBuffer.sampleRate / downsampleRatio;
+        console.warn(`Audio downsampled from ${totalSamples} to ${signal.length} samples (ratio: ${downsampleRatio})`);
+        console.warn(`Sample rate adjusted from ${audioBuffer.sampleRate} to ${effectiveSampleRate} Hz`);
+      } else {
+        // Convert to regular array in chunks
+        const chunkSize = 500000; // Process 500k samples at a time
+        signal = new Array(totalSamples);
+
+        for (let start = 0; start < totalSamples; start += chunkSize) {
+          const end = Math.min(start + chunkSize, totalSamples);
+          for (let i = start; i < end; i++) {
+            signal[i] = channelData[i];
+          }
+
+          setLoadingProgress(60 + ((start + chunkSize) / totalSamples) * 30);
+          // Allow UI to update
+          await new Promise(resolve => setTimeout(resolve, 0));
+        }
+      }
+
+      setLoadingProgress(95);
+
+      // Create audio URL from the original file
+      const audioUrl = URL.createObjectURL(file);
+      currentFileRef.current = audioUrl;
+
       onAudioLoaded({
         signal,
-        sampleRate: audioBuffer.sampleRate,
+        sampleRate: effectiveSampleRate,
         duration: audioBuffer.duration,
-        fileName: file.name
+        fileName: file.name,
+        audioUrl: audioUrl  // Pass the original file URL
       });
-      
-      setUploadProgress(100);
-      
-      // Hide progress bar after a short delay
-      setTimeout(() => {
-        setIsUploading(false);
-        setUploadProgress(0);
-      }, 500);
+
+      setLoadingProgress(100);
+
+      // Reset file input for re-uploading the same file
+      e.target.value = '';
+
     } catch (error) {
       console.error('Error loading audio:', error);
-      alert('Error loading audio file: ' + error.message);
-      setIsUploading(false);
-      setUploadProgress(0);
-      e.target.value = ''; // Reset file input
+      alert('Error loading audio file: ' + error.message + '\n\nPlease ensure the file is a valid audio format.');
+      e.target.value = '';
+    } finally {
+      setIsLoading(false);
+      setLoadingProgress(0);
     }
   };
 
@@ -99,10 +133,19 @@ export default function AudioUpload({ onAudioLoaded, fileName, onGenerateSignal,
     }
   };
 
+  // Cleanup blob URLs on unmount
+  useEffect(() => {
+    return () => {
+      if (currentFileRef.current) {
+        URL.revokeObjectURL(currentFileRef.current);
+      }
+    };
+  }, []);
+
   return (
     <section className="audio-upload-section">
       <h2>Audio Input</h2>
-      
+
       <div className="upload-area">
         <input
           ref={fileInputRef}
@@ -110,45 +153,32 @@ export default function AudioUpload({ onAudioLoaded, fileName, onGenerateSignal,
           accept="audio/*"
           onChange={handleFileChange}
           style={{ display: 'none' }}
-          disabled={isUploading}
+          disabled={isLoading}
         />
-        <button 
+        <button
           className="upload-btn"
           onClick={() => fileInputRef.current?.click()}
-          disabled={isUploading}
+          disabled={isLoading}
         >
-          {isUploading ? '⏳ Loading...' : '📁 Upload Audio File'}
+          {isLoading ? '⏳ Loading...' : '📁 Upload Audio File'}
         </button>
         <span className="file-name">
           {fileName || 'No file selected'}
         </span>
       </div>
 
-      {isUploading && (
-        <div className="upload-progress-container">
-          <div className="upload-progress-bar">
-            <div 
-              className="upload-progress-fill"
-              style={{ width: `${uploadProgress}%` }}
-            />
+      {isLoading && (
+        <div className="loading-progress">
+          <div className="progress-bar-upload">
+            <div className="progress-fill-upload" style={{ width: `${loadingProgress}%` }}></div>
           </div>
-          <span className="upload-progress-text">
-            {uploadProgress < 30 ? 'Reading file...' : 
-             uploadProgress < 70 ? 'Decoding audio...' :
-             uploadProgress < 90 ? 'Extracting signal...' :
-             'Finalizing...'}
-            {' '}({uploadProgress}%)
-          </span>
+          <span className="progress-text-upload">Loading audio... {Math.round(loadingProgress)}%</span>
         </div>
       )}
 
       <div className="synthetic-controls">
         <h3>Or Generate Synthetic Signal</h3>
-        <button 
-          className="secondary-btn" 
-          onClick={onGenerateSignal}
-          disabled={isUploading}
-        >
+        <button className="secondary-btn" onClick={onGenerateSignal} disabled={isLoading}>
           {getGenerateButtonText()}
         </button>
       </div>

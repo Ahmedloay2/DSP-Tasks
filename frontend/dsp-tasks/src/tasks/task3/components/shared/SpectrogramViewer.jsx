@@ -13,27 +13,10 @@ export default function SpectrogramViewer({
   title = 'Spectrogram'
 }) {
   const canvasRef = useRef(null);
-  const signalHashRef = useRef(null);
-
-  // Create signal hash to detect changes
-  const createSignalHash = (sig) => {
-    if (!sig || sig.length === 0) return 0;
-    let hash = sig.length;
-    for (let i = 0; i < Math.min(10, sig.length); i++) {
-      const idx = Math.floor((i / 10) * sig.length);
-      hash += sig[idx] * (i + 1);
-    }
-    return hash;
-  };
 
   useEffect(() => {
     if (signal.length > 0) {
-      const currentHash = createSignalHash(signal);
-      // Only redraw if signal actually changed
-      if (signalHashRef.current !== currentHash) {
-        signalHashRef.current = currentHash;
-        drawSpectrogram();
-      }
+      drawSpectrogram();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signal, sampleRate]);
@@ -50,10 +33,26 @@ export default function SpectrogramViewer({
     ctx.fillStyle = '#0f172a';
     ctx.fillRect(0, 0, width, height);
 
-    // Calculate spectrogram
-    const windowSize = 1024; // FFT window size
-    const hopSize = 256; // Overlap
-    const numWindows = Math.floor((signal.length - windowSize) / hopSize);
+    // OPTIMIZED: Increased window and hop sizes for faster processing
+    const windowSize = 2048; // Increased from 1024
+    const hopSize = 1024;    // Increased from 256 (4x faster)
+
+    // Limit number of windows for very long signals
+    const maxWindows = 800;
+    let processSignal = signal;
+    let effectiveHopSize = hopSize;
+
+    const estimatedWindows = Math.floor((signal.length - windowSize) / hopSize);
+
+    if (estimatedWindows > maxWindows) {
+      // Increase hop size to limit computation
+      effectiveHopSize = Math.floor((signal.length - windowSize) / maxWindows);
+    }
+
+    const numWindows = Math.min(
+      Math.floor((processSignal.length - windowSize) / effectiveHopSize),
+      maxWindows
+    );
 
     if (numWindows <= 0) {
       ctx.fillStyle = '#cbd5e1';
@@ -62,18 +61,14 @@ export default function SpectrogramViewer({
       return;
     }
 
-    // Limit number of windows for performance (max 500 time slices)
-    const MAX_WINDOWS = 500;
-    const windowStep = Math.max(1, Math.floor(numWindows / MAX_WINDOWS));
-
     const spectrogramData = [];
     let globalMax = 0;
 
-    // Compute STFT with adaptive downsampling
-    for (let i = 0; i < numWindows; i += windowStep) {
-      const start = i * hopSize;
+    // Compute STFT
+    for (let i = 0; i < numWindows; i++) {
+      const start = i * effectiveHopSize;
       const end = start + windowSize;
-      const window = signal.slice(start, end);
+      const window = processSignal.slice(start, end);
 
       // Apply Hann window
       const windowed = window.map((val, idx) => {
@@ -98,8 +93,8 @@ export default function SpectrogramViewer({
       spectrogramData.push(magnitudes);
     }
 
-    // Draw spectrogram - use actual data length
-    const timeStep = width / spectrogramData.length;
+    // Draw spectrogram
+    const timeStep = width / numWindows;
     const freqStep = height / (windowSize / 2);
 
     for (let t = 0; t < spectrogramData.length; t++) {
@@ -107,7 +102,7 @@ export default function SpectrogramViewer({
       for (let f = 0; f < mags.length; f++) {
         const intensity = Math.log10(1 + mags[f] / (globalMax || 1)) / Math.log10(2);
         const color = getColorForIntensity(intensity);
-        
+
         ctx.fillStyle = color;
         ctx.fillRect(
           t * timeStep,
@@ -120,13 +115,13 @@ export default function SpectrogramViewer({
 
     // Draw axes and labels
     drawAxes(ctx, width, height);
-    drawLabels(ctx, width, height, signal.length, sampleRate);
+    drawLabels(ctx, width, height, processSignal.length, sampleRate);
   };
 
   const getColorForIntensity = (intensity) => {
     // Colormap: blue -> cyan -> green -> yellow -> red
     const clamp = Math.max(0, Math.min(1, intensity));
-    
+
     if (clamp < 0.25) {
       const t = clamp / 0.25;
       return `rgb(${Math.floor(t * 255)}, 0, ${Math.floor(255 * (1 - t))})`;
@@ -145,7 +140,7 @@ export default function SpectrogramViewer({
   const drawAxes = (ctx, width, height) => {
     ctx.strokeStyle = '#cbd5e1';
     ctx.lineWidth = 2;
-    
+
     // Bottom axis
     ctx.beginPath();
     ctx.moveTo(0, height - 1);
@@ -185,7 +180,7 @@ export default function SpectrogramViewer({
     ctx.save();
     ctx.font = 'bold 12px Arial';
     ctx.fillText('Time (s)', width / 2 - 30, height - 20);
-    
+
     ctx.translate(20, height / 2);
     ctx.rotate(-Math.PI / 2);
     ctx.fillText('Frequency (Hz)', 0, 0);

@@ -385,57 +385,6 @@
   }
 }
 
-/* Dark theme support */
-[data-theme="dark"] .time-control-panel {
-  background: var(--gradient-background-dark);
-  border-color: var(--border-light-dark);
-}
-
-[data-theme="dark"] .control-label,
-[data-theme="dark"] .time-display,
-[data-theme="dark"] .speed-value,
-[data-theme="dark"] .zoom-value {
-  color: var(--text-secondary-dark);
-}
-
-[data-theme="dark"] .speed-control,
-[data-theme="dark"] .seek-bar,
-[data-theme="dark"] .zoom-control {
-  background: var(--bg-tertiary-dark);
-  border-color: var(--border-light-dark);
-}
-
-[data-theme="dark"] .speed-btn,
-[data-theme="dark"] .nav-btn,
-[data-theme="dark"] .zoom-btn {
-  background: var(--bg-surface-dark);
-  color: var(--text-primary-dark);
-  border-color: var(--border-medium-dark);
-}
-
-[data-theme="dark"] .speed-btn:hover:not(.active),
-[data-theme="dark"] .nav-btn:hover:not(:disabled),
-[data-theme="dark"] .zoom-btn:hover:not(:disabled) {
-  background: var(--bg-hover-dark);
-  border-color: var(--primary);
-}
-
-[data-theme="dark"] .speed-btn.active {
-  background: var(--primary);
-  color: white;
-}
-
-[data-theme="dark"] .seek-track {
-  background: var(--bg-secondary-dark);
-}
-
-[data-theme="dark"] .nav-btn:disabled,
-[data-theme="dark"] .zoom-btn:disabled {
-  background: var(--bg-tertiary-dark);
-  color: var(--text-tertiary-dark);
-  border-color: var(--border-light-dark);
-}
-
 /* High contrast mode support */
 @media (prefers-contrast: high) {
   .time-control-panel {

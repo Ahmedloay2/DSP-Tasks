@@ -7,40 +7,197 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { analyzeSpectrum } from '../../services/equalizerService';
 import './DualSpectrumViewer.css';
 
-export default function DualSpectrumViewer({ 
-  originalSignal = [], 
-  processedSignal = [], 
-  sampleRate = 44100 
+export default function DualSpectrumViewer({
+  originalSignal = [],
+  processedSignal = [],
+  sampleRate = 44100
 }) {
   const linearCanvasRef = useRef(null);
   const audiogramCanvasRef = useRef(null);
   const spectrumCacheRef = useRef({ orig: null, proc: null, origSignal: null, procSignal: null });
-  
+
   const [showLinear, setShowLinear] = useState(true);
   const [showAudiogram, setShowAudiogram] = useState(true);
-  const [zoomLevel, setZoomLevel] = useState(1.0);
+  const [zoomLevel, setZoomLevel] = useState(1.5); // Start zoomed in for better visibility
   const [panX, setPanX] = useState(0);
   const [panY, setPanY] = useState(0);
-  //const [isDragging, setIsDragging] = useState(false);
-  //const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
-  const drawSpectrum = useCallback(() => {
-    if (showLinear) drawLinearSpectrum();
-    if (showAudiogram) drawAudiogramSpectrum();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showLinear, showAudiogram, zoomLevel, panX, panY]);
+  // Helper functions
+  const drawGrid = (ctx, width, height, scale) => {
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
 
-  useEffect(() => {
-    if (originalSignal && originalSignal.length > 0) {
-      const timeoutId = setTimeout(() => {
-        drawSpectrum();
-      }, 100); // Throttle spectrum updates
-      return () => clearTimeout(timeoutId);
+    // Horizontal lines (fixed - not affected by zoom/pan)
+    for (let i = 0; i <= 10; i++) {
+      const y = (i / 10) * height;
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(width, y);
+      ctx.stroke();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [originalSignal, processedSignal, sampleRate, showLinear, showAudiogram, zoomLevel, panX, panY]);
 
-  const drawLinearSpectrum = () => {
+    // Vertical lines (move with zoom and pan)
+    const divisions = scale === 'audiogram' ? 5 : 10;
+    for (let i = 0; i <= divisions; i++) {
+      const x = (i / divisions) * width;
+      // Apply zoom and pan to vertical grid lines
+      const gridX = (x - panX) * zoomLevel;
+
+      // Only draw grid lines that are visible
+      if (gridX >= 0 && gridX <= width) {
+        ctx.beginPath();
+        ctx.moveTo(gridX, 0);
+        ctx.lineTo(gridX, height);
+        ctx.stroke();
+      }
+    }
+  };
+
+  const drawSpectrumLine = (ctx, spectrum, width, height, color, scale) => {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3; // Increased from 2 to 3 for better visibility
+    ctx.beginPath();
+
+    const { frequencies, magnitudes } = spectrum;
+    const maxFreq = sampleRate / 2;
+
+    // Find max magnitude for normalization with better scaling
+    let maxMag = 0;
+    for (let i = 0; i < magnitudes.length; i++) {
+      if (magnitudes[i] > maxMag) maxMag = magnitudes[i];
+    }
+
+    // For audiogram scale, use standard audiometry frequency points
+    if (scale === 'audiogram') {
+      const audiogramFreqs = [250, 500, 1000, 2000, 4000, 8000];
+      const points = [];
+
+      // Sample magnitudes at specific audiogram frequencies
+      audiogramFreqs.forEach(targetFreq => {
+        // Find closest frequency in spectrum
+        let closestIdx = 0;
+        let minDiff = Math.abs(frequencies[0] - targetFreq);
+
+        for (let i = 1; i < frequencies.length; i++) {
+          const diff = Math.abs(frequencies[i] - targetFreq);
+          if (diff < minDiff) {
+            minDiff = diff;
+            closestIdx = i;
+          }
+          if (frequencies[i] > targetFreq) break;
+        }
+
+        const x = (Math.log10(targetFreq + 1) / Math.log10(maxFreq)) * width;
+        // Better scaling with zoom: magnitudes scale vertically with zoom for better visibility
+        const normalizedMag = magnitudes[closestIdx] / (maxMag || 1);
+        const verticalScale = Math.min(zoomLevel, 1.5); // Cap vertical scaling at 1.5x
+        const y = height * 0.95 - (normalizedMag * height * 0.85 * verticalScale) - panY;
+
+        points.push({ x: (x - panX) * zoomLevel, y });
+      });
+
+      // Draw lines connecting points
+      points.forEach((point, i) => {
+        if (i === 0) {
+          ctx.moveTo(point.x, point.y);
+        } else {
+          ctx.lineTo(point.x, point.y);
+        }
+      });
+      ctx.stroke();
+
+      // Draw marker circles at each point (like in audiogram) - larger for visibility
+      ctx.fillStyle = color;
+      points.forEach(point => {
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, 6, 0, 2 * Math.PI); // Increased from 4 to 6
+        ctx.fill();
+        // Add white border for better visibility
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 3;
+      });
+    } else {
+      // Linear scale - draw full spectrum with better scaling
+      for (let i = 0; i < frequencies.length; i++) {
+        const freq = frequencies[i];
+        if (freq > maxFreq) break;
+
+        const x = (freq / maxFreq) * width;
+        // Better scaling with zoom: magnitudes scale vertically with zoom for better visibility
+        const normalizedMag = magnitudes[i] / (maxMag || 1);
+        const verticalScale = Math.min(zoomLevel, 1.5); // Cap vertical scaling at 1.5x
+        const y = height * 0.95 - (normalizedMag * height * 0.85 * verticalScale) - panY;
+
+        // Apply zoom and pan
+        const plotX = (x - panX) * zoomLevel;
+
+        if (i === 0) {
+          ctx.moveTo(plotX, y);
+        } else {
+          ctx.lineTo(plotX, y);
+        }
+      }
+      ctx.stroke();
+    }
+  };
+
+  const drawLabels = (ctx, width, height, scale) => {
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = '12px Arial';
+
+    // X-axis labels (frequency)
+    // Audiogram uses standard audiometry frequencies
+    const frequencies = scale === 'audiogram'
+      ? [250, 500, 1000, 2000, 4000, 8000]
+      : [0, 2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 18000, 20000];
+
+    frequencies.forEach(freq => {
+      let x;
+      if (scale === 'audiogram') {
+        x = (Math.log10(freq + 1) / Math.log10(sampleRate / 2)) * width;
+      } else {
+        x = (freq / (sampleRate / 2)) * width;
+      }
+
+      // Apply zoom and pan to labels so they move with the graph
+      const labelX = (x - panX) * zoomLevel;
+
+      // Only draw labels that are visible on canvas
+      if (labelX >= -50 && labelX <= width + 50) {
+        ctx.fillText(freq >= 1000 ? `${freq / 1000}k` : `${freq}`, labelX - 15, height - 5);
+      }
+    });
+
+    // Y-axis label (fixed position)
+    ctx.save();
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('Magnitude', -height / 2, 15);
+    ctx.restore();
+
+    // Y-axis tick marks (move with vertical pan)
+    ctx.font = '10px Arial';
+    for (let i = 0; i <= 10; i++) {
+      const baseY = (i / 10) * height;
+      const value = (1 - i / 10).toFixed(1); // 1.0 at top, 0.0 at bottom
+
+      // Only draw ticks that are visible
+      if (baseY >= 0 && baseY <= height) {
+        ctx.fillText(value, 5, baseY + 4);
+      }
+    }
+
+    ctx.font = '12px Arial'; // Reset font
+
+    // X-axis label (fixed position)
+    ctx.fillText('Frequency (Hz)', width / 2 - 50, height - 5);
+  };
+
+  const drawLinearSpectrum = useCallback(() => {
     const canvas = linearCanvasRef.current;
     if (!canvas) return;
 
@@ -78,17 +235,13 @@ export default function DualSpectrumViewer({
     let procSpectrum = spectrumCacheRef.current.proc;
     if (processedSignal && processedSignal.length > 0) {
       const procSignalHash = createSignalHash(processedSignal);
-      // Always recalculate if hash changed OR if we don't have cached spectrum yet
-      if (spectrumCacheRef.current.procSignal !== procSignalHash || !procSpectrum) {
+      if (spectrumCacheRef.current.procSignal !== procSignalHash) {
         procSpectrum = analyzeSpectrum(processedSignal, sampleRate);
         spectrumCacheRef.current.proc = procSpectrum;
         spectrumCacheRef.current.procSignal = procSignalHash;
       }
     } else {
       procSpectrum = null;
-      // Clear cache when no processed signal
-      spectrumCacheRef.current.proc = null;
-      spectrumCacheRef.current.procSignal = null;
     }
 
     // Draw grid
@@ -102,9 +255,9 @@ export default function DualSpectrumViewer({
 
     // Draw labels
     drawLabels(ctx, width, height, 'linear');
-  };
+  }, [originalSignal, processedSignal, sampleRate, zoomLevel, panX, panY]);
 
-  const drawAudiogramSpectrum = () => {
+  const drawAudiogramSpectrum = useCallback(() => {
     const canvas = audiogramCanvasRef.current;
     if (!canvas) return;
 
@@ -135,106 +288,20 @@ export default function DualSpectrumViewer({
 
     // Draw labels
     drawLabels(ctx, width, height, 'audiogram');
-  };
+  }, [originalSignal, processedSignal, sampleRate, zoomLevel, panX, panY]);
 
-  const drawGrid = (ctx, width, height, scale) => {
-    ctx.strokeStyle = '#334155';
-    ctx.lineWidth = 1;
-
-    // Horizontal lines
-    for (let i = 0; i <= 10; i++) {
-      const y = (i / 10) * height;
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(width, y);
-      ctx.stroke();
+  // Effect to draw spectrums when data changes
+  useEffect(() => {
+    if (originalSignal && originalSignal.length > 0) {
+      const timeoutId = setTimeout(() => {
+        if (showLinear) drawLinearSpectrum();
+        if (showAudiogram) drawAudiogramSpectrum();
+      }, 100);
+      return () => clearTimeout(timeoutId);
     }
+  }, [originalSignal, processedSignal, sampleRate, showLinear, showAudiogram, zoomLevel, panX, panY, drawLinearSpectrum, drawAudiogramSpectrum]);
 
-    // Vertical lines
-    const divisions = scale === 'audiogram' ? 7 : 10;
-    for (let i = 0; i <= divisions; i++) {
-      const x = (i / divisions) * width;
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, height);
-      ctx.stroke();
-    }
-  };
-
-  const drawSpectrumLine = (ctx, spectrum, width, height, color, scale) => {
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-
-    const { frequencies, magnitudes } = spectrum;
-    const maxFreq = sampleRate / 2;
-
-    // Find max magnitude for normalization (avoid spread operator for large arrays)
-    let maxMag = 0;
-    for (let i = 0; i < magnitudes.length; i++) {
-      if (magnitudes[i] > maxMag) maxMag = magnitudes[i];
-    }
-
-    for (let i = 0; i < frequencies.length; i++) {
-      const freq = frequencies[i];
-      if (freq > maxFreq) break;
-
-      let x;
-      if (scale === 'audiogram') {
-        // Logarithmic scale
-        x = (Math.log10(freq + 1) / Math.log10(maxFreq)) * width;
-      } else {
-        // Linear scale
-        x = (freq / maxFreq) * width;
-      }
-
-      // Apply zoom and pan
-      x = (x - panX) * zoomLevel;
-      
-      const normalizedMag = magnitudes[i] / (maxMag || 1);
-      const y = height - (normalizedMag * height * 0.9) - panY;
-
-      if (i === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
-      }
-    }
-
-    ctx.stroke();
-  };
-
-  const drawLabels = (ctx, width, height, scale) => {
-    ctx.fillStyle = '#cbd5e1';
-    ctx.font = '12px Arial';
-
-    // X-axis labels (frequency) - reduced for audiogram
-    const frequencies = scale === 'audiogram' 
-      ? [125, 250, 500, 1000, 2000, 4000, 8000]  // Standard audiometric frequencies
-      : [0, 2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 18000, 20000];
-
-    frequencies.forEach(freq => {
-      let x;
-      if (scale === 'audiogram') {
-        x = (Math.log10(freq + 1) / Math.log10(sampleRate / 2)) * width;
-      } else {
-        x = (freq / (sampleRate / 2)) * width;
-      }
-      
-      ctx.fillText(freq >= 1000 ? `${freq / 1000}k` : `${freq}`, x - 15, height - 5);
-    });
-
-    // Y-axis label
-    ctx.save();
-    ctx.rotate(-Math.PI / 2);
-    ctx.fillText('Magnitude', -height / 2, 15);
-    ctx.restore();
-
-    // X-axis label
-    ctx.fillText('Frequency (Hz)', width / 2 - 50, height - 5);
-  };
-
-  /*const handleMouseDown = (e) => {
+  const handleMouseDown = (e) => {
     setIsDragging(true);
     setDragStart({ x: e.clientX, y: e.clientY });
   };
@@ -260,7 +327,7 @@ export default function DualSpectrumViewer({
     }
     const delta = e.deltaY > 0 ? 0.9 : 1.1;
     setZoomLevel(Math.max(1, Math.min(20, zoomLevel * delta)));
-  }, [zoomLevel]);*/
+  }, [zoomLevel]);
 
   const resetView = () => {
     setZoomLevel(1.0);
@@ -274,7 +341,7 @@ export default function DualSpectrumViewer({
 
       <div className="dual-spectrum-container">
         {/* Linear Scale */}
-        <div className={`spectrum-panel ${!showLinear ? 'hidden' : ''}`}>
+        <div className="spectrum-panel">
           <div className="spectrum-panel-header">
             <h3>Linear Scale</h3>
             <div className="spectrum-controls">
@@ -287,24 +354,27 @@ export default function DualSpectrumViewer({
                   checked={showLinear}
                   onChange={(e) => setShowLinear(e.target.checked)}
                 />
-                <span>Show</span>
+                <span className="toggle-slider"></span>
+                <span className="toggle-label">Show</span>
               </label>
             </div>
           </div>
-          <div className="spectrum-wrapper">
-            <canvas
-              ref={linearCanvasRef}
-              /*onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
-              onWheel={handleWheel}*/
-            />
-          </div>
+          {showLinear && (
+            <div className="spectrum-wrapper">
+              <canvas
+                ref={linearCanvasRef}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                onWheel={handleWheel}
+              />
+            </div>
+          )}
         </div>
 
         {/* Audiogram Scale */}
-        <div className={`spectrum-panel ${!showAudiogram ? 'hidden' : ''}`}>
+        <div className="spectrum-panel">
           <div className="spectrum-panel-header">
             <h3>Audiogram Scale</h3>
             <div className="spectrum-controls">
@@ -317,20 +387,23 @@ export default function DualSpectrumViewer({
                   checked={showAudiogram}
                   onChange={(e) => setShowAudiogram(e.target.checked)}
                 />
-                <span>Show</span>
+                <span className="toggle-slider"></span>
+                <span className="toggle-label">Show</span>
               </label>
             </div>
           </div>
-          <div className="spectrum-wrapper">
-            <canvas
-              ref={audiogramCanvasRef}
-              /*onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
-              onWheel={handleWheel}*/
-            />
-          </div>
+          {showAudiogram && (
+            <div className="spectrum-wrapper">
+              <canvas
+                ref={audiogramCanvasRef}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                onWheel={handleWheel}
+              />
+            </div>
+          )}
         </div>
       </div>
 
