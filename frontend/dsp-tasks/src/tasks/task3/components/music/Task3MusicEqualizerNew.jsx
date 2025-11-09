@@ -315,6 +315,7 @@ export default function Task3MusicEqualizer() {
               signal={inputSignal}
               sampleRate={sampleRate}
               title="Input Signal"
+              audioUrl={inputAudioUrl}
               linkedViewerState={linkedViewerState}
               onViewStateChange={handleViewStateChange}
             />
@@ -322,6 +323,7 @@ export default function Task3MusicEqualizer() {
               signal={outputSignal}
               sampleRate={sampleRate}
               title="Output Signal"
+              audioUrl={processedAudioUrl}
               linkedViewerState={linkedViewerState}
               onViewStateChange={handleViewStateChange}
             />

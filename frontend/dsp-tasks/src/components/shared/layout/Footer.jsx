@@ -8,32 +8,13 @@ import './Footer.css';
  */
 const footerLinks = [
   { title: 'Task 1', path: '/task1' },
-  /*{ title: 'Task 2', path: '/task2' },
+  { title: 'Task 2', path: '/task2' },
   { title: 'Task 3', path: '/task3' },
-  { title: 'Task 4', path: '/task4' },
+  /*{ title: 'Task 4', path: '/task4' },
   { title: 'Task 5', path: '/task5' },
   { title: 'Task 6', path: '/task6' }*/
 ];
 
-/**
- * Main footer component
- * 
- * Displays site information, quick navigation links, and social connections.
- * Maintains consistent styling with the overall design system.
- * 
- * @component
- * @example
- * import Footer from './components/shared/layout/Footer';
- * 
- * function App() {
- *   return (
- *     <div>
- *       <main>Content here</main>
- *       <Footer />
- *     </div>
- *   );
- * }
- */
 export default function Footer() {
   return (
     <footer className="footer">

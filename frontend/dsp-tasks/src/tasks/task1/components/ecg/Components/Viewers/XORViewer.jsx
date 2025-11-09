@@ -1,26 +1,29 @@
 import React, { useRef, useEffect, useCallback, useState } from 'react';
+import XORProcessor from '../../services/XORProcessor';
 import { CHANNEL_CONFIG } from '../../constants/MultiChannelConfig';
 import './XORViewer.css';
 
 /**
  * XORViewer Component
- * Displays XOR visualization by comparing consecutive chunks
- * Shows chunk 1 (blue), chunk 2 (green), and XOR result (highlighting differences)
+ * Enhanced XOR visualization with odd/even chunk orga            <p className="info-text">
+              <strong>XOR Visualization:</strong> Signal divided into {chunkSize}s chunks. 
+              Chunks organized into odd/even arrays. Results displayed in real-time during playback.
+            </p>tion and alternating comparisons
+ * Implements: odd[0]⊕even[0], even[0]⊕odd[1], odd[1]⊕even[1], ... pattern
  */
 const XORViewer = ({
   channels,
-  selectedChannels,
+  selectedChannels, // Object format - expects single channel selected
   currentTime,
   samplingRate,
   chunkSize = 5,
-  onChunkSizeChange
+  onChunkSizeChange,
+  isPlaying = false // NEW: Track playback state
 }) => {
   const canvasRef = useRef(null);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
-  const [chunk1Data, setChunk1Data] = useState(null);
-  const [chunk2Data, setChunk2Data] = useState(null);
-  const [xorResult, setXorResult] = useState(null);
-  const [currentChunkIndex, setCurrentChunkIndex] = useState(0);
+  const [processedXORData, setProcessedXORData] = useState(null);
+  const [currentXORChunk, setCurrentXORChunk] = useState(null);
 
   // Get the single selected channel
   const selectedChannel = Object.keys(selectedChannels).find(ch => selectedChannels[ch]) || null;
@@ -41,107 +44,106 @@ const XORViewer = ({
     return () => window.removeEventListener('resize', updateSize);
   }, []);
 
-  // Process chunks based on current time - continuous streaming with reset per chunk
-// Process chunks based on current time - true real-time streaming
+  // Process XOR data using the enhanced processor
   useEffect(() => {
     if (!selectedChannel || !channels[selectedChannel]) {
-      setChunk1Data(null);
-      setChunk2Data(null);
-      setXorResult(null);
+      setProcessedXORData(null);
+      setCurrentXORChunk(null);
       return;
     }
 
     const channelData = channels[selectedChannel];
-    const samplesPerChunk = Math.floor(chunkSize * samplingRate);
     
-    // Calculate which pair of chunks we're visualizing
-    const pairIndex = Math.floor(currentTime / (chunkSize * 2));
-    const timeInPair = currentTime % (chunkSize * 2);
+    // Use XORProcessor to compute odd/even chunks and alternating XOR pattern
+    const result = XORProcessor.processSignal(
+      channelData,
+      samplingRate,
+      chunkSize,
+      currentTime
+    );
     
-    setCurrentChunkIndex(pairIndex);
-    
-    // Get chunk boundaries
-    const chunk1Start = pairIndex * 2 * samplesPerChunk;
-    const chunk2Start = chunk1Start + samplesPerChunk;
-    
-    if (chunk1Start >= channelData.length) {
-      setChunk1Data(null);
-      setChunk2Data(null);
-      setXorResult(null);
-      return;
-    }
-    
-    // Phase 1: Stream chunk 1 sample by sample (first chunkSize seconds)
-    if (timeInPair < chunkSize) {
-      // Calculate how many samples we've streamed based on real time
-      const elapsedInChunk1 = timeInPair;
-      const samplesToStream = Math.floor(elapsedInChunk1 * samplingRate);
-      
-      const chunk1End = chunk1Start + samplesPerChunk;
-      const fullChunk1 = channelData.slice(chunk1Start, Math.min(chunk1End, channelData.length));
-      
-      // Stream only the samples we've reached in real time
-      const chunk1 = fullChunk1.slice(0, Math.min(samplesToStream, fullChunk1.length));
-      
-      setChunk1Data(chunk1.length > 0 ? chunk1 : null);
-      setChunk2Data(null);
-      setXorResult(null);
-    } 
-    // Phase 2: Keep full chunk 1, stream chunk 2 sample by sample
-    else {
-      const chunk1End = chunk1Start + samplesPerChunk;
-      const fullChunk1 = channelData.slice(chunk1Start, Math.min(chunk1End, channelData.length));
-      setChunk1Data(fullChunk1.length > 0 ? fullChunk1 : null);
-      
-      if (chunk2Start < channelData.length) {
-        const elapsedInChunk2 = timeInPair - chunkSize;
-        const samplesToStream = Math.floor(elapsedInChunk2 * samplingRate);
-        
-        const chunk2End = chunk2Start + samplesPerChunk;
-        const fullChunk2 = channelData.slice(chunk2Start, Math.min(chunk2End, channelData.length));
-        
-        // Stream only the samples we've reached in real time
-        const chunk2 = fullChunk2.slice(0, Math.min(samplesToStream, fullChunk2.length));
-        
-        setChunk2Data(chunk2.length > 0 ? chunk2 : null);
-        
-        // Compute XOR progressively for streamed portion
-        if (fullChunk1.length > 0 && chunk2.length > 0) {
-          const xor = [];
-          for (let i = 0; i < chunk2.length; i++) {
-            const diff = Math.abs(fullChunk1[i] - chunk2[i]);
-            xor.push(diff);
-          }
-          setXorResult(xor);
-        } else {
-          setXorResult(null);
-        }
-      } else {
-        setChunk2Data(null);
-        setXorResult(null);
-      }
-    }
-    
+    setProcessedXORData(result);
   }, [channels, selectedChannel, currentTime, chunkSize, samplingRate]);
 
-  // Draw chunk info overlay - SIMPLIFIED
-  const drawChunkInfo = useCallback((ctx) => {
-    if (!selectedChannel) return;
+  // Update current XOR chunk based on playback time
+  useEffect(() => {
+    if (!processedXORData || !isPlaying) {
+      // Only show XOR results during playback
+      if (!isPlaying) {
+        setCurrentXORChunk(null);
+      }
+      return;
+    }
 
-    // Draw simple info box
+    // Get current chunk to display
+    const chunk = XORProcessor.getCurrentXORChunk(
+      processedXORData,
+      currentTime,
+      chunkSize
+    );
+    
+    setCurrentXORChunk(chunk);
+  }, [processedXORData, currentTime, chunkSize, isPlaying]);
+
+  // Draw chunk info overlay
+  const drawChunkInfo = useCallback((ctx) => {
+    if (!processedXORData) return;
+
+    const { metadata } = processedXORData;
+    
+    // Draw info box in top-left
     ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-    ctx.fillRect(5, 5, 280, 70);
+    ctx.fillRect(5, 5, 300, 110);
     ctx.strokeStyle = '#2c3e50';
     ctx.lineWidth = 2;
-    ctx.strokeRect(5, 5, 280, 70);
+    ctx.strokeRect(5, 5, 300, 110);
     
+    // Draw text info
     ctx.fillStyle = '#2c3e50';
     ctx.font = 'bold 13px Arial';
     ctx.textAlign = 'left';
-    ctx.fillText(`Channel: ${CHANNEL_CONFIG[selectedChannel]?.name || 'None'}`, 15, 25);
-    ctx.fillText(`Chunk Size: ${chunkSize}s`, 15, 45);
-    ctx.fillText(`Current Chunk: ${currentChunkIndex}`, 15, 65);
-  }, [selectedChannel, chunkSize, currentChunkIndex]);
+    ctx.fillText(`Chunk Size: ${chunkSize}s`, 15, 25);
+    ctx.fillText(`Channel: ${CHANNEL_CONFIG[selectedChannel]?.name || 'None'}`, 15, 45);
+    
+    // Show chunk organization
+    ctx.fillText(`Odd Chunks: ${metadata.oddCount}`, 15, 65);
+    ctx.fillText(`Even Chunks: ${metadata.evenCount}`, 15, 85);
+    ctx.fillText(`XOR Comparisons: ${metadata.totalComparisons}`, 15, 105);
+  }, [chunkSize, selectedChannel, processedXORData]);
+
+  // Draw current XOR comparison info
+  const drawCurrentComparison = useCallback((ctx, width) => {
+    if (!currentXORChunk || !isPlaying) {
+      // Don't show message if we have processed data (just waiting for play)
+      return;
+    }
+
+    const { comparison, chunkIndex, totalChunks } = currentXORChunk;
+    
+    // Draw comparison label box
+    const boxWidth = 320;
+    const boxHeight = 80;
+    const boxX = width - boxWidth - 10;
+    const boxY = 10;
+    
+    ctx.fillStyle = 'rgba(52, 152, 219, 0.95)';
+    ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+    ctx.strokeStyle = '#2980b9';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
+    
+    // Draw comparison text
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 16px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Current XOR Comparison', boxX + boxWidth / 2, boxY + 25);
+    
+    ctx.font = 'bold 18px Courier New';
+    ctx.fillText(comparison.label, boxX + boxWidth / 2, boxY + 50);
+    
+    ctx.font = '12px Arial';
+    ctx.fillText(`Chunk ${chunkIndex + 1} of ${totalChunks}`, boxX + boxWidth / 2, boxY + 70);
+  }, [currentXORChunk, isPlaying]);
 
   // Draw XOR visualization
   const draw = useCallback(() => {
@@ -158,7 +160,7 @@ const XORViewer = ({
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, width, height);
 
-    if (!selectedChannel) {
+    if (!selectedChannel || !processedXORData) {
       // Draw empty state message
       ctx.fillStyle = '#7f8c8d';
       ctx.font = '16px Arial';
@@ -170,39 +172,29 @@ const XORViewer = ({
     // Draw grid
     drawGrid(ctx, width, height);
 
-    // Calculate samplesPerChunk for full-width rendering
-    const samplesPerChunk = Math.floor(chunkSize * samplingRate);
-
-    // Draw signals - always show when we have data (not just when playing)
-    if (selectedChannel && chunk1Data) {
-      // Draw chunk 1 (blue)
-      drawChunkSignal(ctx, chunk1Data, width, height, 'rgba(52, 152, 219, 0.7)', samplesPerChunk);
-      
-      // If we have chunk 2 and XOR result, overlay them
-      if (chunk2Data && xorResult) {
-        // Draw chunk 2 (green, semi-transparent)
-        drawChunkSignal(ctx, chunk2Data, width, height, 'rgba(46, 204, 113, 0.5)', samplesPerChunk);
-        
-        // Draw XOR result (red/yellow where different, faded where same)
-        drawXORSignal(ctx, xorResult, width, height, samplesPerChunk);
-      }
-    } else if (!selectedChannel) {
-      // Only show message when no channel selected
+    // Draw XOR signal only if playing
+    if (isPlaying && currentXORChunk && currentXORChunk.data) {
+      drawXORSignal(ctx, currentXORChunk.data, width, height);
+    } else if (processedXORData && !isPlaying) {
+      // Show helpful message when data is ready but not playing
       ctx.fillStyle = 'rgba(52, 152, 219, 0.1)';
       ctx.fillRect(0, 0, width, height);
       ctx.fillStyle = '#3498db';
       ctx.font = 'bold 20px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('Select a channel to view XOR visualization', width / 2, height / 2);
+      ctx.fillText('▶ Press Play to view XOR results', width / 2, height / 2);
       ctx.font = '14px Arial';
       ctx.fillStyle = '#7f8c8d';
-      ctx.fillText('Streaming comparison will start when you play', width / 2, height / 2 + 30);
+      ctx.fillText('XOR analysis ready • ' + processedXORData.metadata.totalComparisons + ' comparisons available', width / 2, height / 2 + 30);
     }
 
     // Draw chunk info
     drawChunkInfo(ctx);
+    
+    // Draw current comparison info
+    drawCurrentComparison(ctx, width);
 
-  }, [canvasSize, selectedChannel, chunk1Data, chunk2Data, xorResult, chunkSize, samplingRate, drawChunkInfo]);
+  }, [canvasSize, selectedChannel, processedXORData, currentXORChunk, isPlaying, drawChunkInfo, drawCurrentComparison]);
 
   const drawGrid = (ctx, width, height) => {
     ctx.strokeStyle = '#e0e0e0';
@@ -237,24 +229,27 @@ const XORViewer = ({
     ctx.stroke();
   };
 
-  const drawChunkSignal = (ctx, data, width, height, color, totalSamples) => {
-    if (!data || data.length === 0) return;
+  const drawXORSignal = (ctx, data, width, height) => {
+    if (data.length === 0) return;
 
-    // Use totalSamples (full chunk size) for X-axis mapping to prevent compression
-    const samplesForWidth = totalSamples || data.length;
-    
     // Calculate scaling
     const max = Math.max(...data);
     const min = Math.min(...data);
     const range = max - min || 1;
-    const verticalScale = (height * 0.7) / range;
+    const verticalScale = (height * 0.8) / range;
 
-    ctx.strokeStyle = color;
+    // Draw complete XOR waveform with gradient
+    const gradient = ctx.createLinearGradient(0, 0, 0, height);
+    gradient.addColorStop(0, '#e74c3c');
+    gradient.addColorStop(0.5, '#f39c12');
+    gradient.addColorStop(1, '#27ae60');
+
+    ctx.strokeStyle = gradient;
     ctx.lineWidth = 2;
     ctx.beginPath();
 
     for (let i = 0; i < data.length; i++) {
-      const x = (i / samplesForWidth) * width;  // Map to full chunk width
+      const x = (i / data.length) * width;
       const y = height / 2 - ((data[i] - min - range / 2) * verticalScale);
 
       if (i === 0) {
@@ -265,35 +260,6 @@ const XORViewer = ({
     }
 
     ctx.stroke();
-  };
-
-  const drawXORSignal = (ctx, data, width, height, totalSamples) => {
-    if (data.length === 0) return;
-
-    // Use totalSamples for X-axis mapping
-    const samplesForWidth = totalSamples || data.length;
-    
-    // Simple XOR logic: where difference is near zero, erase (white)
-    // where difference exists, keep visible
-    
-    const max = Math.max(...data);
-    const threshold = max * 0.05; // 5% threshold for "same"
-
-    // Draw erasure effect
-    for (let i = 0; i < data.length; i++) {
-      const x = (i / samplesForWidth) * width;  // Map to full chunk width
-      const diff = data[i];
-      
-      if (diff < threshold) {
-        // Same values - erase by drawing white vertical line
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, height);
-        ctx.stroke();
-      }
-    }
   };
 
   // Redraw on changes
@@ -345,24 +311,23 @@ const XORViewer = ({
               )}
             </div>
             
-            {chunk1Data && chunk2Data && (
+            {processedXORData && (
               <div className="xor-statistics">
                 <p className="stat-item">
-                  <strong>Chunk 1 Length:</strong> {chunk1Data.length} samples
+                  <strong>Odd Chunks:</strong> {processedXORData.metadata.oddCount}
                 </p>
                 <p className="stat-item">
-                  <strong>Chunk 2 Length:</strong> {chunk2Data.length} samples
+                  <strong>Even Chunks:</strong> {processedXORData.metadata.evenCount}
                 </p>
                 <p className="stat-item">
-                  <strong>XOR Result:</strong> {xorResult ? xorResult.length : 0} samples
+                  <strong>XOR Comparisons:</strong> {processedXORData.metadata.totalComparisons}
                 </p>
               </div>
             )}
             
             <p className="info-text">
-              <strong>XOR Visualization:</strong> Signal divided into {chunkSize}s chunks. 
-              Chunk 1 (blue) displays fully, then Chunk 2 (green) overlays progressively. 
-              Where signals match, they erase each other (white). Where different, both remain visible.
+              <strong>XOR Visualization:</strong> Signal divided into {chunkSize}s chunks.
+              Chunks organized into odd/even arrays., Results displayed in real-time during playback.
             </p>
           </div>
         </div>

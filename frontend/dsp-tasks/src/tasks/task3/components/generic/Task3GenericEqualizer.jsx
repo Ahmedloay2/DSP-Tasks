@@ -395,6 +395,7 @@ export default function Task3GenericEqualizer() {
               signal={inputSignal}
               sampleRate={sampleRate}
               title="Input Signal"
+              audioUrl={inputAudioUrl}
               linkedViewerState={linkedViewerState}
               onViewStateChange={handleViewStateChange}
             />
@@ -402,6 +403,7 @@ export default function Task3GenericEqualizer() {
               signal={outputSignal}
               sampleRate={sampleRate}
               title="Output Signal"
+              audioUrl={processedAudioUrl}
               linkedViewerState={linkedViewerState}
               onViewStateChange={handleViewStateChange}
             />

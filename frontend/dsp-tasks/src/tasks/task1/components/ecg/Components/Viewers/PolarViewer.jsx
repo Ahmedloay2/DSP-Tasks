@@ -100,12 +100,12 @@ const PolarViewer = ({
 
     // Radial lines (12 divisions like a clock)
     for (let i = 0; i < 12; i++) {
-      const angle = (i / 12) * 2 * Math.PI; // Start from right (0°), go counter-clockwise
+      const angle = (i / 12) * 2 * Math.PI - Math.PI / 2; // Start from top
       ctx.beginPath();
       ctx.moveTo(centerX, centerY);
       ctx.lineTo(
         centerX + maxRadius * Math.cos(angle),
-        centerY - maxRadius * Math.sin(angle) // Negative Y for proper orientation
+        centerY + maxRadius * Math.sin(angle)
       );
       ctx.stroke();
 
@@ -117,7 +117,7 @@ const PolarViewer = ({
       ctx.fillText(
         `${i}`,
         centerX + labelRadius * Math.cos(angle),
-        centerY - labelRadius * Math.sin(angle) + 4 // Negative Y for proper orientation
+        centerY + labelRadius * Math.sin(angle) + 4
       );
     }
 
@@ -136,57 +136,47 @@ const PolarViewer = ({
       if (!channelData) return;
 
       const color = getChannelColor(channelId);
-      const currentIndex = Math.floor(currentTime * samplingRate);
+      const startTime = Math.max(0, currentTime - VIEWPORT_DURATION);
+      const startIndex = Math.floor(startTime * samplingRate);
+      const endIndex = Math.floor(currentTime * samplingRate);
+      const sampleCount = endIndex - startIndex;
 
-      if (currentIndex < 0 || currentIndex >= channelData.length) return;
+      if (sampleCount <= 0) return;
 
-      // Get only the current sample point
-      const amplitude = channelData[currentIndex];
-      
-      // Calculate polar coordinates for this single point
-      // Normalize amplitude to radius
-      const channelStats = RealECGDataService.calculateChannelStats(channelData);
-      const r = channelStats.range === 0 ? 0.5 : (amplitude - channelStats.min) / channelStats.range;
-      
-      // Map current time to angle (rotate over time)
-      // Use modulo to keep it cycling within 2π
-      const totalDuration = channelData.length / samplingRate;
-      const normalizedTime = (currentTime % totalDuration) / totalDuration;
-      const theta = normalizedTime * 2 * Math.PI;
-      
-      // Convert to Cartesian with proper orientation
-      // Standard polar: 0° = right, 90° = up, 180° = left, 270° = down
-      const x = centerX + r * maxRadius * Math.cos(theta);
-      const y = centerY - r * maxRadius * Math.sin(theta); // Negative for proper orientation
+      const polarCoords = RealECGDataService.toPolarCoordinates(channelData, startIndex, sampleCount);
 
-      // Draw a larger, more visible point
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.arc(x, y, 6, 0, 2 * Math.PI);
-      ctx.fill();
-
-      // Add a ring around it for better visibility
+      // Draw polar trace
       ctx.strokeStyle = color;
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(x, y, 10, 0, 2 * Math.PI);
+
+      polarCoords.forEach((point, i) => {
+        const x = centerX + point.x * maxRadius;
+        const y = centerY + point.y * maxRadius;
+
+        if (i === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+      });
+
       ctx.stroke();
 
-      // Draw a line from center to point
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 1;
-      ctx.globalAlpha = 0.3;
-      ctx.beginPath();
-      ctx.moveTo(centerX, centerY);
-      ctx.lineTo(x, y);
-      ctx.stroke();
-      ctx.globalAlpha = 1.0;
-      
-      // Add label showing r and theta values
-      ctx.fillStyle = color;
-      ctx.font = 'bold 11px Arial';
-      ctx.textAlign = 'left';
-      ctx.fillText(`r=${r.toFixed(2)}, θ=${(theta * 180 / Math.PI).toFixed(1)}°`, x + 15, y);
+      // Mark current position
+      if (polarCoords.length > 0) {
+        const lastPoint = polarCoords[polarCoords.length - 1];
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(
+          centerX + lastPoint.x * maxRadius,
+          centerY + lastPoint.y * maxRadius,
+          4,
+          0,
+          2 * Math.PI
+        );
+        ctx.fill();
+      }
     });
   };
 
@@ -204,7 +194,7 @@ const PolarViewer = ({
 
       polarCoords.forEach((point, i) => {
         const x = centerX + point.x * maxRadius;
-        const y = centerY - point.y * maxRadius; // Negative Y for proper orientation
+        const y = centerY + point.y * maxRadius;
 
         if (i === 0) {
           ctx.moveTo(x, y);
@@ -226,7 +216,7 @@ const PolarViewer = ({
 
       recentData.forEach((point, i) => {
         const x = centerX + point.x * maxRadius;
-        const y = centerY - point.y * maxRadius; // Negative Y for proper orientation
+        const y = centerY + point.y * maxRadius;
 
         if (i === 0) {
           ctx.moveTo(x, y);
@@ -295,8 +285,8 @@ const PolarViewer = ({
         <p className="info-text">
           <strong>Polar View:</strong> Amplitude maps to radius, time maps to angle.
           {polarMode === POLAR_MODES.LATEST_FIXED ? 
-            ' Latest Fixed mode shows only the current point position.' : 
-            ' Cumulative mode shows all signal points from the beginning.'}
+            ' Showing last 10 seconds.' : 
+            ' Showing cumulative trace from beginning.'}
         </p>
       </div>
     </div>

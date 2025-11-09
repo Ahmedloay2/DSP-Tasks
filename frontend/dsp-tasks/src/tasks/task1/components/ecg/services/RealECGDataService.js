@@ -261,41 +261,18 @@ class RealECGDataService {
     const xMax = Math.max(...xValues);
     const yMin = Math.min(...yValues);
     const yMax = Math.max(...yValues);
-    
-    const xRange = xMax - xMin;
-    const yRange = yMax - yMin;
 
-    // Initialize grid with consistent structure
-    const grid = [];
-    for (let i = 0; i < gridSize; i++) {
-      const row = [];
-      for (let j = 0; j < gridSize; j++) {
-        row.push(0);
-      }
-      grid.push(row);
-    }
+    // Initialize grid
+    const grid = Array(gridSize).fill(0).map(() => Array(gridSize).fill(0));
 
-    // Populate grid with safe division
+    // Populate grid
     points.forEach(point => {
-      let xIndex, yIndex;
+      const xIndex = Math.floor(((point.x - xMin) / (xMax - xMin)) * (gridSize - 1));
+      const yIndex = Math.floor(((point.y - yMin) / (yMax - yMin)) * (gridSize - 1));
       
-      if (xRange === 0) {
-        xIndex = Math.floor(gridSize / 2);
-      } else {
-        xIndex = Math.floor(((point.x - xMin) / xRange) * (gridSize - 1));
+      if (xIndex >= 0 && xIndex < gridSize && yIndex >= 0 && yIndex < gridSize) {
+        grid[yIndex][xIndex]++;
       }
-      
-      if (yRange === 0) {
-        yIndex = Math.floor(gridSize / 2);
-      } else {
-        yIndex = Math.floor(((point.y - yMin) / yRange) * (gridSize - 1));
-      }
-      
-      // Clamp to grid bounds
-      xIndex = Math.max(0, Math.min(gridSize - 1, xIndex));
-      yIndex = Math.max(0, Math.min(gridSize - 1, yIndex));
-      
-      grid[yIndex][xIndex]++;
     });
 
     return grid;

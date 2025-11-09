@@ -21,8 +21,8 @@ export default function DualSpectrumViewer({
   const [zoomLevel, setZoomLevel] = useState(1.0);
   const [panX, setPanX] = useState(0);
   const [panY, setPanY] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  //const [isDragging, setIsDragging] = useState(false);
+  //const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
   const drawSpectrum = useCallback(() => {
     if (showLinear) drawLinearSpectrum();
@@ -78,13 +78,17 @@ export default function DualSpectrumViewer({
     let procSpectrum = spectrumCacheRef.current.proc;
     if (processedSignal && processedSignal.length > 0) {
       const procSignalHash = createSignalHash(processedSignal);
-      if (spectrumCacheRef.current.procSignal !== procSignalHash) {
+      // Always recalculate if hash changed OR if we don't have cached spectrum yet
+      if (spectrumCacheRef.current.procSignal !== procSignalHash || !procSpectrum) {
         procSpectrum = analyzeSpectrum(processedSignal, sampleRate);
         spectrumCacheRef.current.proc = procSpectrum;
         spectrumCacheRef.current.procSignal = procSignalHash;
       }
     } else {
       procSpectrum = null;
+      // Clear cache when no processed signal
+      spectrumCacheRef.current.proc = null;
+      spectrumCacheRef.current.procSignal = null;
     }
 
     // Draw grid
@@ -204,9 +208,9 @@ export default function DualSpectrumViewer({
     ctx.fillStyle = '#cbd5e1';
     ctx.font = '12px Arial';
 
-    // X-axis labels (frequency)
+    // X-axis labels (frequency) - reduced for audiogram
     const frequencies = scale === 'audiogram' 
-      ? [20, 100, 500, 1000, 2000, 5000, 10000, 20000]
+      ? [125, 250, 500, 1000, 2000, 4000, 8000]  // Standard audiometric frequencies
       : [0, 2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 18000, 20000];
 
     frequencies.forEach(freq => {
@@ -230,7 +234,7 @@ export default function DualSpectrumViewer({
     ctx.fillText('Frequency (Hz)', width / 2 - 50, height - 5);
   };
 
-  const handleMouseDown = (e) => {
+  /*const handleMouseDown = (e) => {
     setIsDragging(true);
     setDragStart({ x: e.clientX, y: e.clientY });
   };
@@ -256,7 +260,7 @@ export default function DualSpectrumViewer({
     }
     const delta = e.deltaY > 0 ? 0.9 : 1.1;
     setZoomLevel(Math.max(1, Math.min(20, zoomLevel * delta)));
-  }, [zoomLevel]);
+  }, [zoomLevel]);*/
 
   const resetView = () => {
     setZoomLevel(1.0);
@@ -290,11 +294,11 @@ export default function DualSpectrumViewer({
           <div className="spectrum-wrapper">
             <canvas
               ref={linearCanvasRef}
-              onMouseDown={handleMouseDown}
+              /*onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseUp}
-              onWheel={handleWheel}
+              onWheel={handleWheel}*/
             />
           </div>
         </div>
@@ -320,11 +324,11 @@ export default function DualSpectrumViewer({
           <div className="spectrum-wrapper">
             <canvas
               ref={audiogramCanvasRef}
-              onMouseDown={handleMouseDown}
+              /*onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseUp}
-              onWheel={handleWheel}
+              onWheel={handleWheel}*/
             />
           </div>
         </div>

@@ -215,11 +215,25 @@ export function analyzeSpectrum(signal, sampleRate) {
     return { frequencies: [], magnitudes: [] };
   }
 
-  // Pad to power of 2
-  const paddedSize = Math.pow(2, Math.ceil(Math.log2(signal.length)));
-  const paddedSignal = new Array(paddedSize).fill(0);
-  for (let i = 0; i < signal.length; i++) {
-    paddedSignal[i] = signal[i];
+  // Performance optimization: limit FFT size for large signals
+  // Max FFT size: 65536 (2^16) for good frequency resolution without freezing
+  const MAX_FFT_SIZE = 65536;
+  let workingSignal = signal;
+  
+  // If signal is too long, downsample by taking evenly spaced samples
+  if (signal.length > MAX_FFT_SIZE) {
+    const decimationFactor = Math.ceil(signal.length / MAX_FFT_SIZE);
+    workingSignal = [];
+    for (let i = 0; i < signal.length; i += decimationFactor) {
+      workingSignal.push(signal[i]);
+    }
+  }
+
+  // Pad to power of 2 (limited to MAX_FFT_SIZE)
+  const targetSize = Math.min(MAX_FFT_SIZE, Math.pow(2, Math.ceil(Math.log2(workingSignal.length))));
+  const paddedSignal = new Array(targetSize).fill(0);
+  for (let i = 0; i < Math.min(workingSignal.length, targetSize); i++) {
+    paddedSignal[i] = workingSignal[i];
   }
 
   const freqDomain = fft(paddedSignal);

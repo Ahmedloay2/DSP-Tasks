@@ -13,10 +13,27 @@ export default function SpectrogramViewer({
   title = 'Spectrogram'
 }) {
   const canvasRef = useRef(null);
+  const signalHashRef = useRef(null);
+
+  // Create signal hash to detect changes
+  const createSignalHash = (sig) => {
+    if (!sig || sig.length === 0) return 0;
+    let hash = sig.length;
+    for (let i = 0; i < Math.min(10, sig.length); i++) {
+      const idx = Math.floor((i / 10) * sig.length);
+      hash += sig[idx] * (i + 1);
+    }
+    return hash;
+  };
 
   useEffect(() => {
     if (signal.length > 0) {
-      drawSpectrogram();
+      const currentHash = createSignalHash(signal);
+      // Only redraw if signal actually changed
+      if (signalHashRef.current !== currentHash) {
+        signalHashRef.current = currentHash;
+        drawSpectrogram();
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signal, sampleRate]);
@@ -45,11 +62,15 @@ export default function SpectrogramViewer({
       return;
     }
 
+    // Limit number of windows for performance (max 500 time slices)
+    const MAX_WINDOWS = 500;
+    const windowStep = Math.max(1, Math.floor(numWindows / MAX_WINDOWS));
+
     const spectrogramData = [];
     let globalMax = 0;
 
-    // Compute STFT
-    for (let i = 0; i < numWindows; i++) {
+    // Compute STFT with adaptive downsampling
+    for (let i = 0; i < numWindows; i += windowStep) {
       const start = i * hopSize;
       const end = start + windowSize;
       const window = signal.slice(start, end);
@@ -77,8 +98,8 @@ export default function SpectrogramViewer({
       spectrogramData.push(magnitudes);
     }
 
-    // Draw spectrogram
-    const timeStep = width / numWindows;
+    // Draw spectrogram - use actual data length
+    const timeStep = width / spectrogramData.length;
     const freqStep = height / (windowSize / 2);
 
     for (let t = 0; t < spectrogramData.length; t++) {

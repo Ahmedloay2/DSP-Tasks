@@ -343,17 +343,39 @@ export default function CineSignalViewer({
     let prevY = null;
     
     const pixelsPerSample = plotWidth / samplesPerWindow;
-    const drawStep = Math.max(1, Math.floor(samplesPerWindow / (plotWidth * 2)));
+    
+    // Adaptive downsampling for performance with large signals
+    // Max points to render: 2 points per pixel for smooth rendering
+    const MAX_POINTS = plotWidth * 2;
+    const drawStep = Math.max(1, Math.floor(samplesPerWindow / MAX_POINTS));
     
     // Only draw up to current position when playing
     const samplesToShow = isPlaying ? recordedSamples : samplesPerWindow;
+    
+    // Use min-max decimation for better visual representation when heavily downsampled
+    const useMinMaxDecimation = drawStep > 4;
     
     for (let i = 0; i < samplesToShow; i += drawStep) {
       const dataIndex = windowStartSample + i;
       
       if (dataIndex >= 0 && dataIndex < signal.length) {
         const x = yAxisX + (i * pixelsPerSample);
-        const value = signal[Math.floor(dataIndex)];
+        
+        let value;
+        if (useMinMaxDecimation && dataIndex + drawStep < signal.length) {
+          // For heavily downsampled view, show both min and max in the range
+          let min = signal[Math.floor(dataIndex)];
+          let max = min;
+          for (let j = 0; j < drawStep && dataIndex + j < signal.length; j++) {
+            const sample = signal[Math.floor(dataIndex + j)];
+            if (sample < min) min = sample;
+            if (sample > max) max = sample;
+          }
+          // Alternate between min and max for visual accuracy
+          value = (i / drawStep) % 2 === 0 ? min : max;
+        } else {
+          value = signal[Math.floor(dataIndex)];
+        }
         
         // Apply panY offset
         const adjustedValue = value + (safePanY * signalScale.range * 0.01);

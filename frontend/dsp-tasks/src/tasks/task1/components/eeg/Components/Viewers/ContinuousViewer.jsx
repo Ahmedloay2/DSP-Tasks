@@ -335,20 +335,20 @@ const ContinuousViewer = ({
   }, [draw]);
 
   return (
-    <div className="continuous-viewer" style={{ backgroundColor: '#1a1a1a' }}>
-      <div className="viewer-header" style={{ backgroundColor: 'transparent', borderBottom: '1px solid #444' }}>
-        <h3 className="viewer-title" style={{ color: '#fff' }}>Real-Time ECG Monitor</h3>
+    <div className="continuous-viewer">
+      <div className="viewer-header">
+        <h3 className="viewer-title">Real-Time EEG Monitor</h3>
         <div className="viewer-info">
-          <span className="info-item" style={{ color: '#aaa' }}>
+          <span className="info-item">
             Window: {VIEWPORT_DURATION}s
           </span>
-          <span className="info-item" style={{ color: '#aaa' }}>
+          <span className="info-item">
             Channels: {Object.values(selectedChannels).filter(Boolean).length}
           </span>
-          <span className="info-item" style={{ color: '#aaa' }}>
+          <span className="info-item">
             Zoom: {zoomLevel.toFixed(1)}x
           </span>
-          <span className="info-item" style={{ color: '#aaa' }}>
+          <span className="info-item">
             Buffer: {Object.values(signalBuffers)[0]?.length || 0} / {maxBufferSize} samples
           </span>
         </div>
@@ -363,8 +363,8 @@ const ContinuousViewer = ({
 
       {/* Amplitude display - Always visible for selected channels */}
       {Object.keys(selectedChannels).filter(ch => selectedChannels[ch]).length > 0 && (
-        <div className="amplitude-display" style={{ backgroundColor: '#2a2a2a', borderTop: '1px solid #444' }}>
-          <h4 className="amplitude-title" style={{ color: '#fff' }}>
+        <div className="amplitude-display">
+          <h4 className="amplitude-title">
             {Object.keys(amplitudes).length > 0 ? 'Amplitude at Cursor:' : 'Hover to see amplitude'}
           </h4>
           <div className="amplitude-grid">
@@ -380,10 +380,10 @@ const ContinuousViewer = ({
                       className="amplitude-color"
                       style={{ backgroundColor: channelConfig?.color || getChannelColor(channelId) }}
                     />
-                    <span className="amplitude-label" style={{ color: '#aaa' }}>
+                    <span className="amplitude-label">
                       {channelConfig?.name || channelId}:
                     </span>
-                    <span className="amplitude-value" style={{ color: '#fff' }}>
+                    <span className="amplitude-value">
                       {amplitudes[channelId] !== undefined 
                         ? amplitudes[channelId].toFixed(4) 
                         : '---'}
