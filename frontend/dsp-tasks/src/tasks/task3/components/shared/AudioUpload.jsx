@@ -97,12 +97,20 @@ export default function AudioUpload({ onAudioLoaded, fileName, onGenerateSignal,
       const audioUrl = URL.createObjectURL(file);
       currentFileRef.current = audioUrl;
 
+      // Get file path (for Electron environment)
+      let filePath = null;
+      if (file.path) {
+        filePath = file.path; // Electron provides the full path
+      }
+
       onAudioLoaded({
         signal,
         sampleRate: effectiveSampleRate,
         duration: audioBuffer.duration,
         fileName: file.name,
-        audioUrl: audioUrl  // Pass the original file URL
+        audioUrl: audioUrl,  // Pass the original file URL
+        filePath: filePath,  // Pass the file path for Python processing
+        file: file           // Pass the original file object
       });
 
       setLoadingProgress(100);

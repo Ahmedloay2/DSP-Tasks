@@ -24,7 +24,7 @@ import './CineSignalViewer.css';
  * Custom hook for managing audio playback and time tracking
  * Separates audio logic from visual rendering
  */
-function useAudioManager(audioUrl) {
+function useAudioManager(audioUrl, gain = 1.0) {
   const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -54,6 +54,7 @@ function useAudioManager(audioUrl) {
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
     audio.addEventListener('ended', handleEnded);
     audio.playbackRate = playbackRate;
+    audio.volume = Math.min(1.0, Math.max(0, gain)); // Clamp gain between 0 and 1
 
     return () => {
       audio.pause();
@@ -61,7 +62,7 @@ function useAudioManager(audioUrl) {
       audio.removeEventListener('ended', handleEnded);
       audio.src = '';
     };
-  }, [audioUrl]); // Removed playbackRate to prevent restart
+  }, [audioUrl, gain, playbackRate]); // Added gain to dependencies
 
   // Update playback rate
   useEffect(() => {
@@ -69,6 +70,13 @@ function useAudioManager(audioUrl) {
       audioRef.current.playbackRate = playbackRate;
     }
   }, [playbackRate]);
+
+  // Update volume when gain changes
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = Math.min(1.0, Math.max(0, gain));
+    }
+  }, [gain]);
 
   // Smooth animation loop for time updates
   useEffect(() => {
@@ -259,7 +267,8 @@ export default function CineSignalViewer({
   audioUrl = null,
   linkedViewerState = null,
   onViewStateChange = null,
-  cursorFollowOnly = false  // New prop: if true, only cursor follows, no audio playback
+  cursorFollowOnly = false,  // New prop: if true, only cursor follows, no audio playback
+  gain = 1.0  // New prop: audio volume gain
 }) {
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
@@ -272,8 +281,8 @@ export default function CineSignalViewer({
   const [scrollOffset, setScrollOffset] = useState(0);
   const [zoom, setZoom] = useState(1.0);
 
-  // Use audio manager hook
-  const audio = useAudioManager(audioUrl);
+  // Use audio manager hook with gain
+  const audio = useAudioManager(audioUrl, gain);
   const { isPlaying, currentTime, duration, playbackRate, play, pause, stop, seek, changePlaybackRate, startSeeking, endSeeking, isSeeking, isStopping } = audio;
 
   // Zoom handlers

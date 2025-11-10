@@ -100,8 +100,18 @@ export default function SpectrogramViewer({
     for (let t = 0; t < spectrogramData.length; t++) {
       const mags = spectrogramData[t];
       for (let f = 0; f < mags.length; f++) {
-        const intensity = Math.log10(1 + mags[f] / (globalMax || 1)) / Math.log10(2);
-        const color = getColorForIntensity(intensity);
+        // Enhanced dynamic range compression
+        // Convert to dB scale with better contrast
+        const normalized = mags[f] / (globalMax || 1);
+        const dbValue = 20 * Math.log10(Math.max(normalized, 1e-10));
+        // Map from typical range [-100, 0] dB to [0, 1]
+        const intensity = Math.max(0, Math.min(1, (dbValue + 80) / 80));
+
+        // Apply gamma correction for better visibility
+        const gamma = 0.7; // < 1 brightens mid-tones
+        const enhancedIntensity = Math.pow(intensity, gamma);
+
+        const color = getColorForIntensity(enhancedIntensity);
 
         ctx.fillStyle = color;
         ctx.fillRect(
@@ -119,21 +129,46 @@ export default function SpectrogramViewer({
   };
 
   const getColorForIntensity = (intensity) => {
-    // Colormap: blue -> cyan -> green -> yellow -> red
+    // Enhanced Magma colormap (similar to Python's matplotlib magma)
+    // Better contrast and more vibrant colors
     const clamp = Math.max(0, Math.min(1, intensity));
 
-    if (clamp < 0.25) {
-      const t = clamp / 0.25;
-      return `rgb(${Math.floor(t * 255)}, 0, ${Math.floor(255 * (1 - t))})`;
+    // Magma color stops (dark blue/purple -> red -> yellow -> white)
+    if (clamp < 0.13) {
+      // Very dark purple/blue
+      const t = clamp / 0.13;
+      const r = Math.floor(t * 15);
+      const g = Math.floor(t * 10);
+      const b = Math.floor(30 + t * 40);
+      return `rgb(${r}, ${g}, ${b})`;
+    } else if (clamp < 0.25) {
+      // Dark purple
+      const t = (clamp - 0.13) / 0.12;
+      const r = Math.floor(15 + t * 50);
+      const g = Math.floor(10 + t * 15);
+      const b = Math.floor(70 + t * 60);
+      return `rgb(${r}, ${g}, ${b})`;
     } else if (clamp < 0.5) {
+      // Purple to red
       const t = (clamp - 0.25) / 0.25;
-      return `rgb(0, ${Math.floor(t * 255)}, ${Math.floor(255 * (1 - t))})`;
+      const r = Math.floor(65 + t * 125);
+      const g = Math.floor(25 + t * 25);
+      const b = Math.floor(130 - t * 85);
+      return `rgb(${r}, ${g}, ${b})`;
     } else if (clamp < 0.75) {
+      // Red to orange/yellow
       const t = (clamp - 0.5) / 0.25;
-      return `rgb(${Math.floor(t * 255)}, 255, 0)`;
+      const r = Math.floor(190 + t * 55);
+      const g = Math.floor(50 + t * 150);
+      const b = Math.floor(45 - t * 35);
+      return `rgb(${r}, ${g}, ${b})`;
     } else {
+      // Yellow to white (bright)
       const t = (clamp - 0.75) / 0.25;
-      return `rgb(255, ${Math.floor(255 * (1 - t))}, 0)`;
+      const r = Math.floor(245 + t * 10);
+      const g = Math.floor(200 + t * 55);
+      const b = Math.floor(10 + t * 150);
+      return `rgb(${r}, ${g}, ${b})`;
     }
   };
 
