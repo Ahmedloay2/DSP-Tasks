@@ -153,19 +153,83 @@ export default function Task3MusicEqualizer() {
     setSeparationProgress(null);
   };
 
-  const handleGenerateSignal = () => {
-    const frequencies = [55, 110, 220, 440, 880, 1760, 3520];
-    const amplitudes = [1.0, 0.9, 0.8, 1.0, 0.7, 0.6, 0.5];
-    const signal = generateSyntheticSignal(frequencies, amplitudes, sampleRate, 5.0);
+  const handleGenerateSignal = async () => {
+    try {
+      console.log('🎵 Loading and mixing instrument samples...');
 
-    setInputSignal(signal);
-    setFileName('Musical Test Signal');
-    setOutputSignal([]);
-    setProcessedAudioUrl(null);
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const TARGET_DURATION = 5.0; // 5 seconds
+      const TARGET_SAMPLES = Math.floor(sampleRate * TARGET_DURATION);
 
-    // Create audio URL for synthetic signal
-    const inputAudioUrl = signalToAudioUrl(signal, sampleRate);
-    setInputAudioUrl(inputAudioUrl);
+      // Load all audio samples
+      const loadPromises = INSTRUMENT_PRESETS
+        .filter(preset => preset.audioFile) // Only load instruments with audio files
+        .map(async (preset) => {
+          try {
+            const response = await fetch(`/audio_samples/instruments/${preset.audioFile}`);
+            if (!response.ok) throw new Error(`Failed to load ${preset.name}`);
+
+            const arrayBuffer = await response.arrayBuffer();
+            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+            const channelData = audioBuffer.getChannelData(0); // Mono
+
+            console.log(`  ✅ Loaded ${preset.name}: ${channelData.length} samples`);
+            return { name: preset.name, data: channelData, gain: preset.gain };
+          } catch (error) {
+            console.warn(`  ⚠️ Could not load ${preset.name}:`, error.message);
+            return null;
+          }
+        });
+
+      const loadedInstruments = (await Promise.all(loadPromises)).filter(Boolean);
+
+      if (loadedInstruments.length === 0) {
+        alert('No audio samples could be loaded. Check that audio files are in public/audio_samples/instruments/');
+        return;
+      }
+
+      console.log(`✅ Loaded ${loadedInstruments.length} instruments`);
+
+      // Create mixed signal
+      const mixedSignal = new Float32Array(TARGET_SAMPLES);
+
+      for (const instrument of loadedInstruments) {
+        const { data, gain } = instrument;
+
+        // Loop or truncate to target duration
+        for (let i = 0; i < TARGET_SAMPLES; i++) {
+          const sampleIndex = i % data.length; // Loop if shorter
+          mixedSignal[i] += data[sampleIndex] * gain;
+        }
+      }
+
+      // Normalize to prevent clipping
+      let maxAmplitude = 0;
+      for (let i = 0; i < mixedSignal.length; i++) {
+        maxAmplitude = Math.max(maxAmplitude, Math.abs(mixedSignal[i]));
+      }
+      if (maxAmplitude > 0) {
+        const normFactor = 0.9 / maxAmplitude; // 0.9 to leave headroom
+        for (let i = 0; i < mixedSignal.length; i++) {
+          mixedSignal[i] *= normFactor;
+        }
+      }
+
+      console.log('✅ Mixed signal created:', mixedSignal.length, 'samples');
+
+      setInputSignal(Array.from(mixedSignal));
+      setFileName('Synthetic Instrument Mix');
+      setOutputSignal([]);
+      setProcessedAudioUrl(null);
+
+      // Create audio URL for synthetic signal
+      const inputAudioUrl = signalToAudioUrl(Array.from(mixedSignal), sampleRate);
+      setInputAudioUrl(inputAudioUrl);
+
+    } catch (error) {
+      console.error('❌ Error generating synthetic signal:', error);
+      alert('Error generating synthetic signal: ' + error.message);
+    }
   };
 
   const handleUpdateGain = (index, gain) => {
