@@ -1,12 +1,4 @@
-/**
- * Theme management hook for DSP Tasks application
- * 
- * This hook provides theme state management and persistence using localStorage.
- * It automatically applies dark/light mode by setting data-theme attribute on document.
- * 
- * @author AI Assistant
- * @version 1.0.0
- */
+
 import { useState, useEffect } from 'react';
 
 /**

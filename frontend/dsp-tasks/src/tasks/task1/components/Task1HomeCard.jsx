@@ -1,12 +1,3 @@
-/**
- * Task 1 Home Card Component
- * 
- * Individual card component for displaying signal processing task information.
- * Features hover effects, animations, and clean modern design.
- * 
- * @author AI Assistant
- * @version 1.0.0
- */
 import React from 'react';
 import { Link } from 'react-router-dom';
 import '../styles/Task1HomeCard.css';

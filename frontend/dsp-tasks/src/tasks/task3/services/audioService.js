@@ -1,13 +1,3 @@
-/**
- * Audio Processing Service
- * 
- * Handles audio file loading, processing, and manipulation.
- * Provides utilities for signal modification using frequency domain techniques.
- * 
- * @author AI Assistant
- * @version 1.0.0
- */
-
 import { fft, ifft, Complex } from './fftService';
 
 /**

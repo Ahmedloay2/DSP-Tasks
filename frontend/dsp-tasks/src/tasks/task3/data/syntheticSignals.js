@@ -1,12 +1,3 @@
-/**
- * Synthetic Signal Examples
- * 
- * Pre-configured synthetic signals for testing the equalizer.
- * Each signal has known frequency components for validation.
- * 
- * @author AI Assistant
- * @version 1.0.0
- */
 
 /**
  * Musical Scale Signal

@@ -1,12 +1,4 @@
-/**
- * Task 1 Home Page Data Configuration
- * 
- * Defines the available signal processing tasks and their metadata.
- * This data drives the home page cards and navigation structure.
- * 
- * @author AI Assistant
- * @version 1.0.0
- */
+
 
 /**
  * Available signal processing tasks configuration

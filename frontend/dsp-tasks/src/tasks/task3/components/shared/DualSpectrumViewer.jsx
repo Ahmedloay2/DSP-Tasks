@@ -21,8 +21,8 @@ export default function DualSpectrumViewer({
   const [zoomLevel, setZoomLevel] = useState(1.5); // Start zoomed in for better visibility
   const [panX, setPanX] = useState(0);
   const [panY, setPanY] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  //const [isDragging, setIsDragging] = useState(false);
+  //const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
   // Helper functions
   const drawGrid = (ctx, width, height, scale) => {
@@ -301,7 +301,7 @@ export default function DualSpectrumViewer({
     }
   }, [originalSignal, processedSignal, sampleRate, showLinear, showAudiogram, zoomLevel, panX, panY, drawLinearSpectrum, drawAudiogramSpectrum]);
 
-  const handleMouseDown = (e) => {
+  /*const handleMouseDown = (e) => {
     setIsDragging(true);
     setDragStart({ x: e.clientX, y: e.clientY });
   };
@@ -327,7 +327,7 @@ export default function DualSpectrumViewer({
     }
     const delta = e.deltaY > 0 ? 0.9 : 1.1;
     setZoomLevel(Math.max(1, Math.min(20, zoomLevel * delta)));
-  }, [zoomLevel]);
+  }, [zoomLevel]);*/
 
   const resetView = () => {
     setZoomLevel(1.0);
@@ -363,11 +363,11 @@ export default function DualSpectrumViewer({
             <div className="spectrum-wrapper">
               <canvas
                 ref={linearCanvasRef}
-                onMouseDown={handleMouseDown}
+                /*onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
-                onWheel={handleWheel}
+                onWheel={handleWheel}*/
               />
             </div>
           )}
@@ -396,11 +396,11 @@ export default function DualSpectrumViewer({
             <div className="spectrum-wrapper">
               <canvas
                 ref={audiogramCanvasRef}
-                onMouseDown={handleMouseDown}
+                /*onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
-                onWheel={handleWheel}
+                onWheel={handleWheel}*/
               />
             </div>
           )}

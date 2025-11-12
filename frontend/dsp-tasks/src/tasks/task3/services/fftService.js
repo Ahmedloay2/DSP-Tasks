@@ -1,16 +1,3 @@
-/**
- * Fast Fourier Transform (FFT) Implementation
- * 
- * Custom implementation of FFT algorithm without external libraries.
- * Used for frequency domain analysis and signal processing.
- * 
- * @author AI Assistant
- * @version 1.0.0
- */
-
-/**
- * Complex number class for FFT calculations
- */
 export class Complex {
   constructor(real, imag = 0) {
     this.real = real;

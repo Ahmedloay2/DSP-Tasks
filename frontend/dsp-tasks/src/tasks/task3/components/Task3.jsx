@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Task3GenericEqualizer from './generic/Task3GenericEqualizer';
 import Task3MusicEqualizer from './music/Task3MusicEqualizerNew';

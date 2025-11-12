@@ -1,11 +1,3 @@
-/**
- * Equalizer Service
- * Core equalizer functionality with FFT-based frequency manipulation
- * 
- * @author AI Assistant
- * @version 2.0.0
- */
-
 import { fft, ifft, Complex } from './fftService';
 
 /**
