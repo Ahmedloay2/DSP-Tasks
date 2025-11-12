@@ -1,13 +1,3 @@
-/**
- * Spectrogram Generation Service
- * 
- * Custom implementation of spectrogram generation without external libraries.
- * Uses FFT for time-frequency analysis of signals.
- * 
- * @author AI Assistant
- * @version 1.0.0
- */
-
 import { fft, applyWindow, getMagnitudeSpectrum } from './fftService';
 
 /**

@@ -1,12 +1,4 @@
-/**
- * Task 1 Home Component
- * 
- * Landing page for Task 1 that displays available signal processing tasks.
- * Shows cards for each available signal type with navigation capabilities.
- * 
- * @author AI Assistant
- * @version 1.0.0
- */
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Task1HomeCard from './Task1HomeCard';

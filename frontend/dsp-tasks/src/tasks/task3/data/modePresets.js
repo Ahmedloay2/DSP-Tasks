@@ -1,10 +1,4 @@
-/**
- * Mode Presets Data
- * Predefined frequency ranges for specialized modes
- * 
- * @author AI Assistant
- * @version 1.0.0
- */
+
 
 /**
  * Musical Instrument Presets
