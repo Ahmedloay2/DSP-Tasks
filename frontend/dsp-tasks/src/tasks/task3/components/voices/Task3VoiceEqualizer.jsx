@@ -102,6 +102,103 @@ export default function Task3VoiceEqualizer() {
     setIsLoaded(true);
   };
 
+  const handleGenerateSignal = async () => {
+    try {
+      console.log('🎵 Generating synthetic signal from real voice audio samples...');
+
+      // Get voice presets with audio files
+      const voicesWithAudio = VOICE_PRESETS.filter(preset => preset.audioFile);
+
+      if (voicesWithAudio.length === 0) {
+        alert('No voice audio files found in presets');
+        return;
+      }
+
+      console.log(`📂 Loading ${voicesWithAudio.length} voice audio samples...`);
+
+      // Create AudioContext
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+      // Load all audio files
+      const loadPromises = voicesWithAudio.map(async (preset) => {
+        const audioPath = `/audio_samples/voices/${preset.audioFile}`;
+        console.log(`📥 Loading ${preset.name}: ${audioPath}`);
+
+        const response = await fetch(audioPath);
+        if (!response.ok) {
+          throw new Error(`Failed to load ${preset.name}: ${response.statusText}`);
+        }
+
+        const arrayBuffer = await response.arrayBuffer();
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+        console.log(`✅ Loaded ${preset.name}: ${audioBuffer.duration.toFixed(2)}s, ${audioBuffer.sampleRate}Hz`);
+
+        return {
+          name: preset.name,
+          buffer: audioBuffer,
+          preset: preset
+        };
+      });
+
+      const loadedAudios = await Promise.all(loadPromises);
+      console.log('✅ All voice audio files loaded successfully');
+
+      // Create a 5-second mix
+      const targetDuration = 5.0; // seconds
+      const targetSamples = Math.floor(targetDuration * sampleRate);
+      const mixed = new Float32Array(targetSamples);
+
+      // Mix all voice sounds
+      loadedAudios.forEach(({ name, buffer, preset }) => {
+        // Get audio data (use first channel if stereo)
+        const channelData = buffer.getChannelData(0);
+
+        // Simple approach: use at native rate and trim/loop as needed
+        const samplesToUse = Math.min(channelData.length, targetSamples);
+
+        // Mix into the output (loop if source is shorter than 5 seconds)
+        for (let i = 0; i < targetSamples; i++) {
+          const srcIndex = i % samplesToUse;
+          mixed[i] += channelData[srcIndex] * preset.gain;
+        }
+      });
+
+      // Normalize to prevent clipping (leave headroom)
+      let maxAmplitude = 0;
+      for (let i = 0; i < mixed.length; i++) {
+        const abs = Math.abs(mixed[i]);
+        if (abs > maxAmplitude) maxAmplitude = abs;
+      }
+
+      if (maxAmplitude > 0) {
+        const normalizeGain = 0.9 / maxAmplitude; // 0.9 for 10% headroom
+        for (let i = 0; i < mixed.length; i++) {
+          mixed[i] *= normalizeGain;
+        }
+        console.log(`📊 Normalized: max amplitude ${maxAmplitude.toFixed(3)} → 0.9`);
+      }
+
+      // Convert Float32Array to regular array
+      const signal = Array.from(mixed);
+
+      console.log(`✅ Generated ${targetDuration}s mixed signal with ${voicesWithAudio.length} voices`);
+
+      setInputSignal(signal);
+      setFileName('Voice Mix (Real Audio)');
+      setOutputSignal([]);
+      setProcessedAudioUrl(null);
+
+      // Create audio URL for synthetic signal
+      const inputAudioUrl = signalToAudioUrl(signal, sampleRate);
+      setInputAudioUrl(inputAudioUrl);
+
+    } catch (error) {
+      console.error('❌ Error generating voice mix:', error);
+      alert(`Failed to generate voice mix: ${error.message}`);
+    }
+  };
+
   const handleUpdateGain = (index, gain) => {
     if (!config) return;
 
@@ -232,6 +329,7 @@ export default function Task3VoiceEqualizer() {
         onAudioLoaded={handleAudioLoaded}
         fileName={fileName}
         mode="voice"
+        onGenerateSignal={handleGenerateSignal}
       />
 
       {/* Control Panel */}

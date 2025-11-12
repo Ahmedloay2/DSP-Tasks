@@ -1,12 +1,4 @@
-"""
-Custom DSP Implementations
-==========================
-From-scratch implementations of FFT and Spectrogram using only NumPy.
-No external DSP libraries used for these core functions.
-"""
-
 import numpy as np
-
 
 class CustomFFT:
     """
@@ -412,59 +404,3 @@ class CustomSpectrogram:
         mel_spec_db = 10 * np.log10(mel_spec / np.max(mel_spec))
         
         return mel_spec_db, times
-
-
-
-def test_implementations():
-    """Test the custom implementations"""
-    print("Testing Custom DSP Implementations")
-    print("=" * 50)
-    
-    # Test signal
-    sample_rate = 44100
-    duration = 1.0
-    t = np.linspace(0, duration, int(sample_rate * duration))
-    
-    # Create test signal: sum of sine waves
-    f1, f2, f3 = 440, 880, 1320  # A4, A5, E6
-    signal = (np.sin(2 * np.pi * f1 * t) + 
-              0.5 * np.sin(2 * np.pi * f2 * t) + 
-              0.3 * np.sin(2 * np.pi * f3 * t))
-    
-    # Test FFT
-    print("\n1. Testing Custom FFT...")
-    fft_result = CustomFFT.rfft(signal[:2048])
-    print(f"   FFT output shape: {fft_result.shape}")
-    print(f"   Peak frequency bins: {np.argsort(np.abs(fft_result))[-3:]}")
-    
-    # Test STFT
-    print("\n2. Testing Custom STFT...")
-    stft_result = CustomSTFT.stft(signal, n_fft=2048, hop_length=512)
-    print(f"   STFT output shape: {stft_result.shape}")
-    print(f"   Frequency bins: {stft_result.shape[0]}")
-    print(f"   Time frames: {stft_result.shape[1]}")
-    
-    # Test Spectrogram
-    print("\n3. Testing Custom Spectrogram...")
-    spec, freqs, times = CustomSpectrogram.compute_spectrogram(
-        signal, sample_rate, n_fft=2048, hop_length=512, scale='db'
-    )
-    print(f"   Spectrogram shape: {spec.shape}")
-    print(f"   Frequency range: {freqs[0]:.1f} - {freqs[-1]:.1f} Hz")
-    print(f"   Time range: {times[0]:.3f} - {times[-1]:.3f} s")
-    print(f"   dB range: {np.min(spec):.1f} - {np.max(spec):.1f} dB")
-    
-    # Test Mel Spectrogram
-    print("\n4. Testing Custom Mel Spectrogram...")
-    mel_spec, mel_times = CustomSpectrogram.mel_spectrogram(
-        signal, sample_rate, n_fft=2048, n_mels=128
-    )
-    print(f"   Mel spectrogram shape: {mel_spec.shape}")
-    print(f"   Mel bins: {mel_spec.shape[0]}")
-    
-    print("\n" + "=" * 50)
-    print("✅ All tests passed!")
-
-
-if __name__ == '__main__':
-    test_implementations()

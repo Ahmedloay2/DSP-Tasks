@@ -59,60 +59,36 @@ export const INSTRUMENT_PRESETS = [
  */
 export const ANIMAL_PRESETS = [
   {
-    name: 'Dog Bark',
-    minFreq: 300,
-    maxFreq: 4000,
+    name: 'Elephant',
+    minFreq: 150,
+    maxFreq: 1000,
     gain: 1.0,
-    icon: '🐕'
+    icon: '🐘',
+    audioFile: '713066__sound_design_freak__elephant-sound.mp3'
   },
   {
-    name: 'Cat Meow',
-    minFreq: 250,
-    maxFreq: 4000,
+    name: 'Bird',
+    minFreq: 2900,
+    maxFreq: 9000,
     gain: 1.0,
-    icon: '🐱'
+    icon: '🐦',
+    audioFile: '507262__spacejoe__bird-noise-4.mp3'
   },
   {
-    name: 'Crow Caw',
+    name: 'Dog',
     minFreq: 300,
     maxFreq: 5000,
     gain: 1.0,
-    icon: '🐦'
+    icon: '🐕‍🦺',
+    audioFile: '483182__spacejoe__barking-dog-2.mp3'
   },
   {
-    name: 'Elephant Trumpet',
-    minFreq: 400,
-    maxFreq: 8000,
+    name: 'Tiger',
+    minFreq: 0,
+    maxFreq: 300,
     gain: 1.0,
-    icon: '🐘'
-  },
-  {
-    name: 'Elk Call',
-    minFreq: 200,
-    maxFreq: 4000,
-    gain: 1.0,
-    icon: '🦌'
-  },
-  {
-    name: 'Gull/Seagull',
-    minFreq: 500,
-    maxFreq: 4500,
-    gain: 1.0,
-    icon: '🦅'
-  },
-  {
-    name: 'Horse Neigh',
-    minFreq: 200,
-    maxFreq: 3500,
-    gain: 1.0,
-    icon: '🐴'
-  },
-  {
-    name: 'Owl Hoot',
-    minFreq: 150,
-    maxFreq: 800,
-    gain: 1.0,
-    icon: '🦉'
+    icon: '🐅',
+    audioFile: '149190__videog__tiger-roar.mp3'
   }
 ];
 
@@ -123,35 +99,39 @@ export const ANIMAL_PRESETS = [
 export const VOICE_PRESETS = [
   {
     name: 'Male Speech',
-    minFreq: 85,
-    maxFreq: 180,
+    minFreq: 0,
+    maxFreq: 586,
     gain: 1.0,
     description: 'Male fundamental frequency',
-    icon: '👨'
+    icon: '👨',
+    audioFile: 'Male_speech.mp3'
   },
   {
     name: 'Female Speech',
-    minFreq: 165,
-    maxFreq: 255,
+    minFreq: 194,
+    maxFreq: 500,
     gain: 1.0,
     description: 'Female fundamental frequency',
-    icon: '👩'
+    icon: '👩',
+    audioFile: 'Female_Speech.mp3'
   },
   {
-    name: 'Child Voice',
-    minFreq: 250,
-    maxFreq: 400,
+    name: 'Child Female',
+    minFreq: 345,
+    maxFreq: 700,
     gain: 1.0,
-    description: 'Child fundamental frequency',
-    icon: '👶'
+    description: 'Child female frequency',
+    icon: '👶',
+    audioFile: 'Female_Child.mp3'
   },
   {
-    name: 'Voice Harmonics',
-    minFreq: 300,
-    maxFreq: 3000,
+    name: 'Child Male ',
+    minFreq: 0,
+    maxFreq: 125,
     gain: 1.0,
-    description: 'Main formant regions',
-    icon: '🎤'
+    description: 'Child male frequency',
+    icon: '🎤',
+    audioFile: 'Male_Child.mp3'
   },
   {
     name: 'Speech Clarity',

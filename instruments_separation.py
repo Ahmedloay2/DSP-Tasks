@@ -43,8 +43,8 @@ import matplotlib
 matplotlib.use('Agg')  # Non-interactive backend
 import matplotlib.pyplot as plt
 
-# Import custom DSP implementations
-from custom_dsp import CustomSTFT, CustomSpectrogram
+warnings.filterwarnings('ignore')
+
 
 # Try to import torch for GPU detection
 try:
@@ -333,141 +333,6 @@ class InstrumentSeparator:
         
         print("="*60)
         return mixed
-    
-    def generate_spectrograms(self, original_audio, mixed_audio):
-        """
-        Generate spectrograms for comparison with parallel STFT computation
-        
-        Args:
-            original_audio (np.ndarray): Original audio
-            mixed_audio (np.ndarray): Mixed audio from AI model
-            
-        Returns:
-            str: Path to saved spectrogram image
-        """
-        print("\n" + "="*60)
-        print("📊 GENERATING SPECTROGRAMS (CUDA ACCELERATED)")
-        print("="*60)
-        
-        # AGGRESSIVE OPTIMIZATION: Downsample very long audio for spectrogram visualization
-        # This doesn't affect the actual separated audio, only the comparison image
-        max_samples_for_spectrogram = self.SAMPLE_RATE * 120  # Max 2 minutes for visualization
-        
-        def downsample_audio(audio, max_samples):
-            """Downsample audio if too long (for visualization only)"""
-            if len(audio) > max_samples:
-                step = len(audio) // max_samples
-                return audio[::step][:max_samples]
-            return audio
-        
-        # Downsample if needed (visual only - doesn't affect output audio)
-        orig_downsampled = downsample_audio(original_audio, max_samples_for_spectrogram)
-        mixed_downsampled = downsample_audio(mixed_audio, max_samples_for_spectrogram)
-        
-        print(f"📉 Audio length: {len(original_audio):,} samples")
-        if len(orig_downsampled) < len(original_audio):
-            print(f"📉 Downsampled for visualization: {len(orig_downsampled):,} samples ({len(orig_downsampled)/self.SAMPLE_RATE:.1f}s)")
-        
-        # Check if CUDA is available
-        use_cuda = self.device == 'cuda'
-        print(f"🖥️  Using {'CUDA GPU' if use_cuda else 'CPU'} for STFT computation")
-        
-        def compute_stft(audio):
-            """Helper to compute STFT and convert to dB - OPTIMIZED"""
-            # MAXIMUM SPEED: Very large hop_length for minimal computation
-            n_fft = 4096       # Large FFT window
-            hop_length = 4096  # HUGE hop (no overlap) = maximum speed
-            
-            # Use standard CustomSTFT (client-side generation is now preferred)
-            stft_matrix = CustomSTFT.stft(
-                audio, 
-                n_fft=n_fft, 
-                hop_length=hop_length,
-                window='hann'
-            )
-            
-            magnitude = np.abs(stft_matrix)
-            magnitude = np.maximum(magnitude, 1e-10)
-            max_val = np.max(magnitude)
-            magnitude_db = 20 * np.log10(magnitude / max_val)
-            return magnitude_db, n_fft, hop_length
-        
-        # Compute STFTs in parallel with maximum workers
-        import multiprocessing
-        max_workers = min(multiprocessing.cpu_count(), 4)  # Use available CPU cores
-        
-        import time
-        stft_start = time.time()
-        
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            future_orig = executor.submit(compute_stft, orig_downsampled)
-            future_ai = executor.submit(compute_stft, mixed_downsampled)
-            
-            print(f"🎨 Computing spectrograms in parallel ({max_workers} workers)...")
-            D_orig, n_fft, hop_length = future_orig.result()
-            D_ai, _, _ = future_ai.result()
-        
-        stft_time = time.time() - stft_start
-        print(f"✅ STFT computed in {stft_time:.2f}s: {D_orig.shape[1]} time frames, {D_orig.shape[0]} frequency bins")
-        
-        # ULTRA FAST RENDERING: Minimal figure size and DPI
-        fig, axes = plt.subplots(2, 1, figsize=(10, 6))  # Smaller figure
-        
-        # Calculate time and frequency arrays for proper axes
-        n_freq_bins, n_time_frames = D_orig.shape
-        times = np.arange(n_time_frames) * (hop_length / self.SAMPLE_RATE)
-        freqs = np.arange(n_freq_bins) * (self.SAMPLE_RATE / n_fft)
-        
-        # SPEED OPTIMIZATION: Render both spectrograms in parallel
-        def render_spectrogram(ax, data, title, extent):
-            """Render a single spectrogram"""
-            img = ax.imshow(data, aspect='auto', origin='lower', 
-                           cmap='magma', extent=extent, interpolation='nearest',
-                           rasterized=True)  # Rasterize for faster save
-            ax.set_title(title, fontsize=12, fontweight='bold', pad=10)
-            ax.set_ylabel('Frequency (Hz)', fontsize=10)
-            ax.set_xlabel('Time (seconds)', fontsize=10)
-            return img
-        
-        print("🎨 Rendering spectrograms...")
-        extent1 = [times[0], times[-1], freqs[0], freqs[-1]]
-        extent2 = extent1
-        
-        # Render in parallel threads
-        with ThreadPoolExecutor(max_workers=2) as executor:
-            future_img1 = executor.submit(
-                render_spectrogram, axes[0], D_orig, 
-                'ORIGINAL AUDIO - Spectrogram', extent1
-            )
-            future_img2 = executor.submit(
-                render_spectrogram, axes[1], D_ai,
-                'AI MODEL OUTPUT - Custom Mix', extent2
-            )
-            
-            img1 = future_img1.result()
-            img2 = future_img2.result()
-        
-        # Add colorbars (these are fast)
-        fig.colorbar(img1, ax=axes[0], format='%+2.0f dB')
-        fig.colorbar(img2, ax=axes[1], format='%+2.0f dB')
-        
-        plt.tight_layout(pad=1.0)
-        
-        # Save spectrogram with MAXIMUM SPEED settings
-        spectrogram_path = self.run_dir / f'spectrograms_{self.timestamp}.png'
-        print("💾 Saving spectrogram image...")
-        
-        # ULTRA FAST SAVE: Low DPI, PNG compression
-        plt.savefig(str(spectrogram_path), 
-                   dpi=100,  # Reduced from 150 for even faster save
-                   bbox_inches='tight',
-                   format='png',
-                   optimize=False,  # Skip optimization for speed
-                   pil_kwargs={'compress_level': 1})  # Minimal compression for speed
-        plt.close('all')  # Close all figures
-        
-        print(f"✅ Spectrograms saved: {spectrogram_path}")
-        return str(spectrogram_path.absolute())
     
     def process(self, gains, keep_full=True, keep_trimmed=True):
         """

@@ -172,27 +172,6 @@ export async function loadAudioFile(audioFile, maxSamples = 1000000) {
 }
 
 /**
- * Compute FFT of audio signal
- * @param {Array} audio - Audio samples
- * @param {number} sampleRate
- * @param {number} nFft - FFT size
- * @returns {Promise<Object>}
- */
-export async function computeFFT(audio, sampleRate, nFft = 2048) {
-    const response = await fetch(`${SERVER_URL}/api/audio/fft`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            audio,
-            sample_rate: sampleRate,
-            n_fft: nFft
-        })
-    });
-
-    return await response.json();
-}
-
-/**
  * Apply filter to audio
  * @param {Array} audio - Audio samples
  * @param {number} sampleRate
@@ -255,58 +234,6 @@ export async function mixAudioTracks(tracks, normalize = true) {
     });
 
     return await response.json();
-}
-
-// ============================================================================
-// SPECTROGRAM & VISUALIZATION
-// ============================================================================
-
-/**
- * Generate spectrogram
- * @param {Array|File} audio - Audio samples or file
- * @param {number} sampleRate - Required if audio is array
- * @param {Object} options - {nFft, hopLength, outputFormat}
- * @returns {Promise<Object|Blob>}
- */
-export async function generateSpectrogram(audio, sampleRate = null, options = {}) {
-    const { nFft = 2048, hopLength = 512, outputFormat = 'png' } = options;
-
-    if (audio instanceof File) {
-        // File upload
-        const formData = new FormData();
-        formData.append('audio', audio);
-        formData.append('n_fft', nFft.toString());
-        formData.append('hop_length', hopLength.toString());
-        formData.append('output_format', outputFormat);
-
-        const response = await fetch(`${SERVER_URL}/api/spectrogram/generate`, {
-            method: 'POST',
-            body: formData
-        });
-
-        if (outputFormat === 'png') {
-            return await response.blob();
-        }
-        return await response.json();
-    } else {
-        // Audio array
-        const response = await fetch(`${SERVER_URL}/api/spectrogram/generate`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                audio,
-                sample_rate: sampleRate,
-                n_fft: nFft,
-                hop_length: hopLength,
-                output_format: outputFormat
-            })
-        });
-
-        if (outputFormat === 'png') {
-            return await response.blob();
-        }
-        return await response.json();
-    }
 }
 
 // ============================================================================

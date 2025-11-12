@@ -1,20 +1,3 @@
-#!/usr/bin/env python3
-"""
-DSP Task 3 - Comprehensive Backend Server
-==========================================
-Flask server handling ALL Task 3 operations:
-1. Instrument Separation (AI-powered)
-2. Audio Processing (equalizer, filters)
-3. File Management
-4. FFT/Spectrogram Generation
-5. Audio Mixing and Effects
-
-Usage:
-    python task3_backend_server.py
-
-The server will run on http://localhost:5001
-"""
-
 from flask import Flask, request, jsonify, send_file, send_from_directory
 from flask_cors import CORS
 import os
@@ -31,9 +14,6 @@ import threading
 import numpy as np
 import soundfile as sf
 from scipy import signal as scipy_signal
-
-# Import custom DSP implementations (no external FFT/spectrogram libraries)
-from custom_dsp import CustomFFT, CustomSTFT, CustomSpectrogram
 
 # Import the instrument separator
 from instruments_separation import InstrumentSeparator
@@ -52,7 +32,6 @@ app.config['MAX_CONTENT_LENGTH'] = 200 * 1024 * 1024  # 200MB max
 app.config['OUTPUT_FOLDER'] = OUTPUT_FOLDER
 app.config['CACHE_FOLDER'] = CACHE_FOLDER
 
-# Create directories
 OUTPUT_FOLDER.mkdir(parents=True, exist_ok=True)
 CACHE_FOLDER.mkdir(parents=True, exist_ok=True)
 
@@ -140,6 +119,7 @@ def separate_instruments():
         - drums, bass, vocals, guitar, piano, other: gain values (0.0-2.0)
         - session_id: optional session identifier
     """
+
     session_id = request.form.get('session_id', str(int(time.time())))
     
     try:
@@ -293,38 +273,6 @@ def load_audio():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/audio/fft', methods=['POST'])
-def compute_fft():
-    """
-    Compute FFT of audio signal
-    
-    JSON body:
-        - audio: array of audio samples
-        - sample_rate: sampling rate
-        - n_fft: FFT size (optional, default: 2048)
-    """
-    try:
-        data = request.get_json()
-        audio = np.array(data['audio'])
-        sr = data['sample_rate']
-        n_fft = data.get('n_fft', 2048)
-        
-        # Compute FFT using custom implementation
-        fft_result = CustomFFT.rfft(audio, n=n_fft)
-        magnitude = np.abs(fft_result)
-        phase = np.angle(fft_result)
-        freqs = CustomFFT.rfftfreq(n_fft, 1/sr)
-        
-        return jsonify({
-            'success': True,
-            'frequencies': freqs.tolist(),
-            'magnitude': magnitude.tolist(),
-            'phase': phase.tolist()
-        })
-        
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
 @app.route('/api/audio/filter', methods=['POST'])
 def apply_filter():
     """
@@ -463,90 +411,6 @@ def mix_audio():
         return jsonify({'error': str(e)}), 500
 
 # ============================================================================
-# SPECTROGRAM & VISUALIZATION ENDPOINTS
-# ============================================================================
-
-@app.route('/api/spectrogram/generate', methods=['POST'])
-def generate_spectrogram():
-    """
-    Generate spectrogram image
-    
-    JSON body or Form data:
-        - audio: array of samples OR audio file
-        - sample_rate: sampling rate (if audio is array)
-        - n_fft: FFT size (optional)
-        - hop_length: hop length (optional)
-        - output_format: 'png' or 'json' (optional, default: 'png')
-    """
-    try:
-        # Check if it's a file upload or JSON
-        if request.is_json:
-            data = request.get_json()
-            audio = np.array(data['audio'])
-            sr = data['sample_rate']
-        else:
-            # File upload
-            if 'audio' not in request.files:
-                return jsonify({'error': 'No audio provided'}), 400
-            
-            file = request.files['audio']
-            temp_path = os.path.join(tempfile.gettempdir(), secure_filename(file.filename))
-            file.save(temp_path)
-            
-            # Load audio file using soundfile
-            audio, sr = sf.read(temp_path)
-            if audio.ndim > 1:  # Convert stereo to mono
-                audio = np.mean(audio, axis=1)
-            os.remove(temp_path)
-        
-        n_fft = int(request.form.get('n_fft', 2048)) if not request.is_json else data.get('n_fft', 2048)
-        hop_length = int(request.form.get('hop_length', 512)) if not request.is_json else data.get('hop_length', 512)
-        output_format = request.form.get('output_format', 'png') if not request.is_json else data.get('output_format', 'png')
-        
-        # Compute spectrogram using custom STFT implementation
-        spectrogram, frequencies, times = CustomSpectrogram.compute_spectrogram(
-            audio, sr, n_fft=n_fft, hop_length=hop_length, scale='db'
-        )
-        
-        if output_format == 'json':
-            return jsonify({
-                'success': True,
-                'magnitude_db': spectrogram.tolist(),
-                'times': times.tolist(),
-                'frequencies': frequencies.tolist()
-            })
-        else:
-            # Generate PNG
-            import matplotlib
-            matplotlib.use('Agg')
-            import matplotlib.pyplot as plt
-            
-            fig, ax = plt.subplots(figsize=(12, 6))
-            
-            # Plot spectrogram
-            extent = [times[0], times[-1], frequencies[0], frequencies[-1]]
-            img = ax.imshow(spectrogram, aspect='auto', origin='lower', 
-                           cmap='magma', extent=extent, interpolation='bilinear')
-            
-            ax.set_title('Spectrogram')
-            ax.set_ylabel('Frequency (Hz)')
-            ax.set_xlabel('Time (s)')
-            fig.colorbar(img, ax=ax, format='%+2.0f dB')
-            
-            # Save to temporary file
-            timestamp = int(time.time())
-            output_path = CACHE_FOLDER / f'spectrogram_{timestamp}.png'
-            plt.savefig(output_path, dpi=150, bbox_inches='tight')
-            plt.close()
-            
-            return send_file(str(output_path), mimetype='image/png')
-        
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return jsonify({'error': str(e)}), 500
-
-# ============================================================================
 # FILE MANAGEMENT ENDPOINTS
 # ============================================================================
 
@@ -669,8 +533,6 @@ def main():
     print("   • Instrument Separation (AI-powered)")
     print("   • Audio Processing & Filtering")
     print("   • Parametric Equalizer")
-    print("   • FFT Analysis")
-    print("   • Spectrogram Generation")
     print("   • Audio Mixing")
     print("   • File Management")
     print("   • Format Conversion")
@@ -683,11 +545,9 @@ def main():
     print("   GET  /health - Health check")
     print("   POST /api/separate - Separate instruments")
     print("   POST /api/audio/load - Load audio file")
-    print("   POST /api/audio/fft - Compute FFT")
     print("   POST /api/audio/filter - Apply filter")
     print("   POST /api/audio/equalizer - Apply EQ")
     print("   POST /api/audio/mix - Mix tracks")
-    print("   POST /api/spectrogram/generate - Generate spectrogram")
     print("   POST /api/audio/convert - Convert format")
     print("   GET  /api/download/<file> - Download file")
     print("   POST /api/cleanup - Clean up files")

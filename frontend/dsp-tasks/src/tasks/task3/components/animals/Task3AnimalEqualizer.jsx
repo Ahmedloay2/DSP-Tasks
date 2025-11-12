@@ -100,19 +100,111 @@ export default function Task3AnimalEqualizer() {
     }
   };
 
-  const handleGenerateSignal = () => {
-    const frequencies = [150, 300, 600, 1200, 2400, 4800];
-    const amplitudes = [1.0, 0.9, 0.8, 0.7, 0.6, 0.5];
-    const signal = generateSyntheticSignal(frequencies, amplitudes, sampleRate, 5.0);
+  const handleGenerateSignal = async () => {
+    try {
+      console.log('🎵 Generating synthetic signal from real animal audio samples...');
 
-    setInputSignal(signal);
-    setFileName('Animal Sound Test Signal');
-    setOutputSignal([]);
-    setProcessedAudioUrl(null);
+      // Get all animal presets with audio files
+      const animalsWithAudio = ANIMAL_PRESETS.filter(preset => preset.audioFile);
 
-    // Create audio URL for synthetic signal
-    const inputAudioUrl = signalToAudioUrl(signal, sampleRate);
-    setInputAudioUrl(inputAudioUrl);
+      if (animalsWithAudio.length === 0) {
+        console.warn('No audio files found in animal presets, using fallback');
+        // Fallback to sine waves
+        const frequencies = [150, 300, 600, 1200, 2400, 4800];
+        const amplitudes = [1.0, 0.9, 0.8, 0.7, 0.6, 0.5];
+        const signal = generateSyntheticSignal(frequencies, amplitudes, sampleRate, 5.0);
+        setInputSignal(signal);
+        setFileName('Animal Sound Test Signal (Synthetic)');
+        setOutputSignal([]);
+        setProcessedAudioUrl(null);
+        const inputAudioUrl = signalToAudioUrl(signal, sampleRate);
+        setInputAudioUrl(inputAudioUrl);
+        return;
+      }
+
+      console.log(`📂 Loading ${animalsWithAudio.length} animal audio samples...`);
+
+      // Create AudioContext
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+      // Load all audio files
+      const loadPromises = animalsWithAudio.map(async (preset) => {
+        const audioPath = `/audio_samples/animals/${preset.audioFile}`;
+        console.log(`📥 Loading ${preset.name}: ${audioPath}`);
+
+        const response = await fetch(audioPath);
+        if (!response.ok) {
+          throw new Error(`Failed to load ${preset.name}: ${response.statusText}`);
+        }
+
+        const arrayBuffer = await response.arrayBuffer();
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+        console.log(`✅ Loaded ${preset.name}: ${audioBuffer.duration.toFixed(2)}s, ${audioBuffer.sampleRate}Hz`);
+
+        return {
+          name: preset.name,
+          buffer: audioBuffer,
+          preset: preset
+        };
+      });
+
+      const loadedAudios = await Promise.all(loadPromises);
+      console.log('✅ All audio files loaded successfully');
+
+      // Create a 5-second mix
+      const targetDuration = 5.0; // seconds
+      const targetSamples = Math.floor(targetDuration * sampleRate);
+      const mixed = new Float32Array(targetSamples);
+
+      // Mix all animal sounds
+      loadedAudios.forEach(({ name, buffer, preset }) => {
+        // Get audio data (use first channel if stereo)
+        const channelData = buffer.getChannelData(0);
+
+        // Simple approach: don't resample, just use at native rate and trim/loop as needed
+        const samplesToUse = Math.min(channelData.length, targetSamples);
+
+        // Mix into the output (loop if source is shorter than 5 seconds)
+        for (let i = 0; i < targetSamples; i++) {
+          const srcIndex = i % samplesToUse;
+          mixed[i] += channelData[srcIndex] * preset.gain;
+        }
+      });
+
+      // Normalize to prevent clipping (leave headroom)
+      let maxAmplitude = 0;
+      for (let i = 0; i < mixed.length; i++) {
+        const abs = Math.abs(mixed[i]);
+        if (abs > maxAmplitude) maxAmplitude = abs;
+      }
+
+      if (maxAmplitude > 0) {
+        const normalizeGain = 0.9 / maxAmplitude; // 0.9 for 10% headroom
+        for (let i = 0; i < mixed.length; i++) {
+          mixed[i] *= normalizeGain;
+        }
+        console.log(`📊 Normalized: max amplitude ${maxAmplitude.toFixed(3)} → 0.9`);
+      }
+
+      // Convert Float32Array to regular array
+      const signal = Array.from(mixed);
+
+      console.log(`✅ Generated ${targetDuration}s mixed signal with ${animalsWithAudio.length} animals`);
+
+      setInputSignal(signal);
+      setFileName('Animal Sound Mix (Real Audio)');
+      setOutputSignal([]);
+      setProcessedAudioUrl(null);
+
+      // Create audio URL for synthetic signal
+      const inputAudioUrl = signalToAudioUrl(signal, sampleRate);
+      setInputAudioUrl(inputAudioUrl);
+
+    } catch (error) {
+      console.error('❌ Error generating animal sound mix:', error);
+      alert(`Failed to generate animal sound mix: ${error.message}`);
+    }
   };
 
   const handleUpdateGain = (index, gain) => {
