@@ -28,15 +28,6 @@ export async function checkServerStatus() {
     }
 }
 
-/**
- * Get server health information
- * @returns {Promise<Object>}
- */
-export async function getServerHealth() {
-    const response = await fetch(`${SERVER_URL}/health`);
-    return await response.json();
-}
-
 // ============================================================================
 // INSTRUMENT SEPARATION
 // ============================================================================
@@ -138,104 +129,6 @@ export async function separateInstruments(audioFile, gains = {}, onProgress = nu
     }
 }
 
-/**
- * Get processing status for a session
- * @param {string} sessionId
- * @returns {Promise<Object>}
- */
-export async function getProcessingStatus(sessionId) {
-    const response = await fetch(`${SERVER_URL}/status/${sessionId}`);
-    return await response.json();
-}
-
-// ============================================================================
-// AUDIO PROCESSING
-// ============================================================================
-
-/**
- * Load audio file from backend
- * @param {File} audioFile
- * @param {number} maxSamples - Maximum samples to return
- * @returns {Promise<Object>}
- */
-export async function loadAudioFile(audioFile, maxSamples = 1000000) {
-    const formData = new FormData();
-    formData.append('audio', audioFile);
-    formData.append('max_samples', maxSamples.toString());
-
-    const response = await fetch(`${SERVER_URL}/api/audio/load`, {
-        method: 'POST',
-        body: formData
-    });
-
-    return await response.json();
-}
-
-/**
- * Apply filter to audio
- * @param {Array} audio - Audio samples
- * @param {number} sampleRate
- * @param {string} filterType - 'lowpass', 'highpass', 'bandpass', 'bandstop'
- * @param {number|Array} cutoff - Cutoff frequency(ies)
- * @param {number} order - Filter order
- * @returns {Promise<Object>}
- */
-export async function applyFilter(audio, sampleRate, filterType, cutoff, order = 5) {
-    const response = await fetch(`${SERVER_URL}/api/audio/filter`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            audio,
-            sample_rate: sampleRate,
-            filter_type: filterType,
-            cutoff,
-            order
-        })
-    });
-
-    return await response.json();
-}
-
-/**
- * Apply parametric equalizer
- * @param {Array} audio - Audio samples
- * @param {number} sampleRate
- * @param {Array} bands - Array of {freq, gain, q} objects
- * @returns {Promise<Object>}
- */
-export async function applyEqualizer(audio, sampleRate, bands) {
-    const response = await fetch(`${SERVER_URL}/api/audio/equalizer`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            audio,
-            sample_rate: sampleRate,
-            bands
-        })
-    });
-
-    return await response.json();
-}
-
-/**
- * Mix multiple audio tracks
- * @param {Array} tracks - Array of {audio, gain} objects
- * @param {boolean} normalize - Whether to normalize output
- * @returns {Promise<Object>}
- */
-export async function mixAudioTracks(tracks, normalize = true) {
-    const response = await fetch(`${SERVER_URL}/api/audio/mix`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            tracks,
-            normalize
-        })
-    });
-
-    return await response.json();
-}
-
 // ============================================================================
 // FILE MANAGEMENT
 // ============================================================================
@@ -264,62 +157,8 @@ export async function downloadFile(fileUrl, filename) {
     }
 }
 
-/**
- * Clean up output files
- * @param {string} outputDir - Optional specific directory to clean
- */
-export async function cleanupOutputs(outputDir = null) {
-    try {
-        const body = outputDir ? JSON.stringify({ output_dir: outputDir }) : {};
-
-        await fetch(`${SERVER_URL}/api/cleanup`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body
-        });
-    } catch (error) {
-        console.error('Error cleaning up outputs:', error);
-    }
-}
-
-/**
- * List all output files
- * @returns {Promise<Object>}
- */
-export async function listOutputFiles() {
-    const response = await fetch(`${SERVER_URL}/api/files/list`);
-    return await response.json();
-}
-
-/**
- * Convert audio file format
- * @param {File} audioFile
- * @param {string} outputFormat - 'wav', 'mp3', 'flac', etc.
- * @param {Object} options - {sampleRate, bitDepth}
- * @returns {Promise<Blob>}
- */
-export async function convertAudioFormat(audioFile, outputFormat, options = {}) {
-    const formData = new FormData();
-    formData.append('audio', audioFile);
-    formData.append('output_format', outputFormat);
-
-    if (options.sampleRate) {
-        formData.append('sample_rate', options.sampleRate.toString());
-    }
-    if (options.bitDepth) {
-        formData.append('bit_depth', options.bitDepth.toString());
-    }
-
-    const response = await fetch(`${SERVER_URL}/api/audio/convert`, {
-        method: 'POST',
-        body: formData
-    });
-
-    return await response.blob();
-}
-
 // ============================================================================
-// PRESETS & CONSTANTS (from old service)
+// PRESETS & CONSTANTS
 // ============================================================================
 
 export const GAIN_PRESETS = {
@@ -405,39 +244,3 @@ export const STEMS = [
     { id: 'piano', name: 'Piano', icon: '🎹', color: '#98D8C8' },
     { id: 'other', name: 'Other', icon: '🎵', color: '#A8E6CF' },
 ];
-
-export function validateAudioFile(file) {
-    const maxSize = 200 * 1024 * 1024; // 200MB
-    const validTypes = [
-        'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/wave',
-        'audio/x-wav', 'audio/flac', 'audio/ogg', 'audio/aac', 'audio/m4a'
-    ];
-
-    if (!file) {
-        return { valid: false, error: 'No file provided' };
-    }
-
-    if (file.size > maxSize) {
-        return { valid: false, error: 'File size exceeds 200MB limit' };
-    }
-
-    if (!validTypes.includes(file.type) && !file.name.match(/\.(mp3|wav|flac|ogg|aac|m4a|wma)$/i)) {
-        return { valid: false, error: 'Invalid file type' };
-    }
-
-    return { valid: true, error: null };
-}
-
-export function formatDuration(seconds) {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-}
-
-export function formatFileSize(bytes) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
-}
