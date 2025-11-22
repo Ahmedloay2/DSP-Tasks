@@ -138,40 +138,47 @@ export function applyEqualizer(complexSignal, config) {
 }
 
 /**
- * Process a signal through the equalizer
- * @param {Array} signal - Input signal
+ * Process a signal through the equalizer (OPTIMIZED with Float32Array)
+ * @param {Array|Float32Array} signal - Input signal
  * @param {Object} config - Configuration object
  * @returns {Array} Processed signal (time domain)
  */
 export function processSignal(signal, config) {
   // Early return if no subdivisions
   if (!config.subdivisions || config.subdivisions.length === 0) {
-    return signal.slice();
+    return signal.slice ? signal.slice() : Array.from(signal);
   }
 
-  // Pad to power of 2
-  const paddedSize = Math.pow(2, Math.ceil(Math.log2(signal.length)));
-  const paddedSignal = new Array(paddedSize).fill(0);
-  for (let i = 0; i < signal.length; i++) {
-    paddedSignal[i] = signal[i];
+  // Convert to Float32Array if needed
+  const signalArray = signal instanceof Float32Array
+    ? signal
+    : new Float32Array(signal);
+
+  // Forward FFT (returns {real, imag} as Float32Arrays)
+  const { real, imag } = fft(signalArray);
+
+  // Apply equalizer settings using the old API (which expects Complex objects)
+  // Convert Float32Arrays to Complex array for compatibility
+  const complexArray = new Array(real.length);
+  for (let i = 0; i < real.length; i++) {
+    complexArray[i] = new Complex(real[i], imag[i]);
   }
 
-  // Convert to frequency domain
-  const freqDomain = fft(paddedSignal);
+  const modified = applyEqualizer(complexArray, config);
 
-  // Apply equalizer
-  const modified = applyEqualizer(freqDomain, config);
-
-  // Convert back to time domain
-  const timeDomain = ifft(modified);
-
-  // Extract real part and return only the original length
-  const result = new Array(signal.length);
-  for (let i = 0; i < signal.length; i++) {
-    result[i] = timeDomain[i].real;
+  // Convert back to Float32Arrays for IFFT
+  const modifiedReal = new Float32Array(modified.length);
+  const modifiedImag = new Float32Array(modified.length);
+  for (let i = 0; i < modified.length; i++) {
+    modifiedReal[i] = modified[i].real;
+    modifiedImag[i] = modified[i].imag;
   }
 
-  return result;
+  // Inverse FFT
+  const { real: timeReal } = ifft(modifiedReal, modifiedImag);
+
+  // Return only the original length as regular array
+  return Array.from(timeReal.slice(0, signal.length));
 }
 
 /**
@@ -221,8 +228,8 @@ export async function processSignalInChunks(signal, config, progressCallback = n
 }
 
 /**
- * Generate frequency spectrum from signal
- * @param {Array} signal - Input signal
+ * Generate frequency spectrum from signal (OPTIMIZED with Float32Array)
+ * @param {Array|Float32Array} signal - Input signal
  * @param {number} sampleRate - Sample rate in Hz
  * @returns {Object} Spectrum object with frequencies and magnitudes
  */
@@ -237,21 +244,22 @@ export function analyzeSpectrum(signal, sampleRate) {
   const maxSamples = 65536; // 64K samples max for spectrum analysis
   if (signal.length > maxSamples) {
     const step = Math.ceil(signal.length / maxSamples);
-    processSignal = [];
-    for (let i = 0; i < signal.length; i += step) {
-      processSignal.push(signal[i]);
+    const downsampledLength = Math.floor(signal.length / step);
+    const downsampled = new Float32Array(downsampledLength);
+    for (let i = 0, j = 0; i < signal.length; i += step, j++) {
+      downsampled[j] = signal[i];
     }
+    processSignal = downsampled;
   }
 
-  // Pad to power of 2
-  const paddedSize = Math.pow(2, Math.ceil(Math.log2(processSignal.length)));
-  const paddedSignal = new Array(paddedSize).fill(0);
-  for (let i = 0; i < processSignal.length; i++) {
-    paddedSignal[i] = processSignal[i];
-  }
+  // Convert to Float32Array if needed
+  const signalArray = processSignal instanceof Float32Array
+    ? processSignal
+    : new Float32Array(processSignal);
 
-  const freqDomain = fft(paddedSignal);
-  const N = freqDomain.length;
+  // Perform FFT (returns {real, imag} as Float32Arrays)
+  const { real, imag } = fft(signalArray);
+  const N = real.length;
   const halfN = Math.floor(N / 2);
 
   const frequencies = new Array(halfN);
@@ -259,9 +267,7 @@ export function analyzeSpectrum(signal, sampleRate) {
 
   for (let i = 0; i < halfN; i++) {
     frequencies[i] = (i * sampleRate) / N;
-    const real = freqDomain[i].real;
-    const imag = freqDomain[i].imag;
-    magnitudes[i] = Math.sqrt(real * real + imag * imag);
+    magnitudes[i] = Math.sqrt(real[i] * real[i] + imag[i] * imag[i]);
   }
 
   return { frequencies, magnitudes };

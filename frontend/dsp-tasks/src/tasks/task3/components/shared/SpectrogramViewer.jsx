@@ -76,16 +76,14 @@ export default function SpectrogramViewer({
         return val * hannWindow;
       });
 
-      // Compute FFT
-      const freqDomain = fft(windowed);
+      // Compute FFT (returns {real, imag} as Float32Arrays)
+      const { real, imag } = fft(windowed);
       const magnitudes = [];
 
       // Get magnitude spectrum (only positive frequencies)
-      for (let j = 0; j < freqDomain.length / 2; j++) {
-        const mag = Math.sqrt(
-          freqDomain[j].real * freqDomain[j].real +
-          freqDomain[j].imag * freqDomain[j].imag
-        );
+      const halfLength = Math.floor(real.length / 2);
+      for (let j = 0; j < halfLength; j++) {
+        const mag = Math.sqrt(real[j] * real[j] + imag[j] * imag[j]);
         magnitudes.push(mag);
         if (mag > globalMax) globalMax = mag;
       }
