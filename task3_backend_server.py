@@ -17,6 +17,9 @@ import soundfile as sf
 # Import the instrument separator
 from instruments_separation import InstrumentSeparator
 
+# Import the voice separator
+from voice_separation import VoiceSeparator
+
 app = Flask(__name__)
 CORS(app)  # Enable CORS for React frontend
 
@@ -82,18 +85,23 @@ threading.Thread(target=cleanup_thread, daemon=True).start()
 @app.route('/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""
+    import torch
+    
     return jsonify({
         'status': 'ok',
         'service': 'dsp-task3-backend',
-        'version': '2.0',
+        'version': '2.1',
         'features': [
             'instrument-separation',
+            'voice-separation',
             'audio-processing',
             'equalizer',
             'fft-analysis',
             'spectrogram-generation',
             'file-management'
-        ]
+        ],
+        'gpu_available': torch.cuda.is_available(),
+        'device': 'cuda' if torch.cuda.is_available() else 'cpu'
     })
 
 @app.route('/status/<session_id>', methods=['GET'])
@@ -127,7 +135,8 @@ def separate_instruments():
             processing_status[session_id] = {
                 'stage': 'uploading',
                 'progress': 0.05,
-                'message': 'Uploading file...'
+                'message': 'Uploading file...',
+                'type': 'instrument_separation'
             }
         
         # Validate file
@@ -154,7 +163,8 @@ def separate_instruments():
             processing_status[session_id] = {
                 'stage': 'uploaded',
                 'progress': 0.1,
-                'message': 'File uploaded successfully'
+                'message': 'File uploaded successfully',
+                'type': 'instrument_separation'
             }
         
         # Parse gains
@@ -178,7 +188,8 @@ def separate_instruments():
                 processing_status[session_id] = {
                     'stage': stage,
                     'progress': progress,
-                    'message': message
+                    'message': message,
+                    'type': 'instrument_separation'
                 }
         
         # Process
@@ -186,7 +197,8 @@ def separate_instruments():
             processing_status[session_id] = {
                 'stage': 'separating',
                 'progress': 0.15,
-                'message': 'Starting AI separation...'
+                'message': 'Starting AI separation...',
+                'type': 'instrument_separation'
             }
         
         result = separator.process(
@@ -202,7 +214,8 @@ def separate_instruments():
             processing_status[session_id] = {
                 'stage': 'complete',
                 'progress': 1.0,
-                'message': 'Processing complete!'
+                'message': 'Processing complete!',
+                'type': 'instrument_separation'
             }
         
         print(f"✅ Separation complete!")
@@ -219,9 +232,316 @@ def separate_instruments():
             processing_status[session_id] = {
                 'stage': 'error',
                 'progress': 0,
-                'message': str(e)
+                'message': str(e),
+                'type': 'instrument_separation'
             }
         
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# ============================================================================
+# VOICE SEPARATION ENDPOINTS
+# ============================================================================
+
+@app.route('/api/separate-voices', methods=['POST'])
+def separate_voices():
+    """
+    Separate audio into individual human voice sources using Multi-Decoder-DPRNN
+    
+    Form data:
+        - audio: audio file
+        - source_0, source_1, ...: gain values (0.0-2.0) for each voice
+        - session_id: optional session identifier
+        - num_sources: expected number of sources (optional, auto-detected)
+    
+    Returns:
+        JSON with separated voice files and metadata
+    """
+    
+    session_id = request.form.get('session_id', str(int(time.time())))
+    
+    try:
+        # Update status
+        with processing_lock:
+            processing_status[session_id] = {
+                'stage': 'uploading',
+                'progress': 0.05,
+                'message': 'Uploading file...',
+                'type': 'voice_separation'
+            }
+        
+        # Validate file
+        if 'audio' not in request.files:
+            return jsonify({'success': False, 'error': 'No audio file provided'}), 400
+        
+        file = request.files['audio']
+        
+        if file.filename == '':
+            return jsonify({'success': False, 'error': 'No file selected'}), 400
+        
+        if not allowed_file(file.filename):
+            return jsonify({'success': False, 'error': 'Invalid file type'}), 400
+        
+        # Save uploaded file
+        filename = secure_filename(file.filename)
+        timestamp = int(time.time())
+        upload_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{timestamp}_{filename}")
+        file.save(upload_path)
+        
+        print(f"✅ File uploaded: {upload_path}")
+        
+        with processing_lock:
+            processing_status[session_id] = {
+                'stage': 'uploaded',
+                'progress': 0.1,
+                'message': 'File uploaded successfully',
+                'type': 'voice_separation'
+            }
+        
+        # Parse gains for sources (if provided)
+        gains = {}
+        for key in request.form.keys():
+            if key.startswith('source_'):
+                try:
+                    source_idx = int(key.split('_')[1])
+                    gain_value = float(request.form.get(key, 1.0))
+                    gains[source_idx] = gain_value
+                except (ValueError, IndexError):
+                    pass
+        
+        print(f"🎚️ Voice gains: {gains if gains else 'Using defaults'}")
+        
+        # Create separator
+        separator = VoiceSeparator(upload_path, str(OUTPUT_FOLDER))
+        
+        # Update status callback
+        def update_progress(stage, progress, message):
+            with processing_lock:
+                processing_status[session_id] = {
+                    'stage': stage,
+                    'progress': progress,
+                    'message': message,
+                    'type': 'voice_separation'
+                }
+        
+        # Process
+        with processing_lock:
+            processing_status[session_id] = {
+                'stage': 'separating',
+                'progress': 0.15,
+                'message': 'Starting AI voice separation...',
+                'type': 'voice_separation'
+            }
+        
+        result = separator.process(
+            gains=gains if gains else None,
+            progress_callback=update_progress
+        )
+        
+        # Clean up uploaded file
+        os.remove(upload_path)
+        
+        with processing_lock:
+            processing_status[session_id] = {
+                'stage': 'complete',
+                'progress': 1.0,
+                'message': 'Voice separation complete!',
+                'type': 'voice_separation'
+            }
+        
+        print(f"✅ Voice separation complete!")
+        
+        result['session_id'] = session_id
+        return jsonify(result)
+        
+    except Exception as e:
+        print(f"❌ Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
+        with processing_lock:
+            processing_status[session_id] = {
+                'stage': 'error',
+                'progress': 0,
+                'message': str(e),
+                'type': 'voice_separation'
+            }
+        
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/voices/adjust-gains', methods=['POST'])
+def adjust_voice_gains():
+    """
+    Re-mix separated voices with new gain settings without re-separating
+    
+    JSON body:
+        {
+            "session_dir": "voices_1234567890",
+            "gains": {
+                "0": 1.5,
+                "1": 0.8,
+                "2": 1.0
+            }
+        }
+    
+    Returns:
+        JSON with new mixed file path
+    """
+    
+    try:
+        data = request.get_json()
+        
+        if not data or 'session_dir' not in data:
+            return jsonify({'success': False, 'error': 'session_dir required'}), 400
+        
+        session_dir = OUTPUT_FOLDER / data['session_dir']
+        
+        if not session_dir.exists():
+            return jsonify({'success': False, 'error': 'Session not found'}), 404
+        
+        gains = data.get('gains', {})
+        
+        # Convert string keys to integers
+        gains = {int(k): float(v) for k, v in gains.items()}
+        
+        print(f"🎚️ Adjusting voice gains: {gains}")
+        
+        # Load all source files
+        sources = []
+        source_files = sorted(session_dir.glob('voice_*.wav'))
+        
+        if not source_files:
+            return jsonify({'success': False, 'error': 'No voice sources found'}), 404
+        
+        # Load sources
+        for i, source_file in enumerate(source_files):
+            audio, sr = sf.read(str(source_file))
+            sources.append(audio)
+        
+        sample_rate = sr
+        
+        # Mix with new gains
+        mixed_audio = np.zeros_like(sources[0])
+        
+        for i, source in enumerate(sources):
+            gain = gains.get(i, 1.0)
+            mixed_audio += source * gain
+        
+        # Normalize to prevent clipping
+        max_val = np.abs(mixed_audio).max()
+        if max_val > 0.99:
+            mixed_audio = mixed_audio * (0.99 / max_val)
+        
+        # Save new mix
+        mixed_path = session_dir / "mixed_adjusted.wav"
+        sf.write(
+            str(mixed_path),
+            mixed_audio,
+            sample_rate,
+            subtype='PCM_16'
+        )
+        
+        print(f"✅ Saved adjusted mix: {mixed_path}")
+        
+        return jsonify({
+            'success': True,
+            'mixed_file': f"{data['session_dir']}/mixed_adjusted.wav",
+            'gains': gains
+        })
+        
+    except Exception as e:
+        print(f"❌ Error adjusting gains: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/voices/info', methods=['GET'])
+def get_voice_info():
+    """
+    Get information about available voice separation models and capabilities
+    
+    Returns:
+        JSON with model information
+    """
+    
+    try:
+        import torch
+        
+        return jsonify({
+            'success': True,
+            'model': 'Multi-Decoder-DPRNN',
+            'model_id': 'JunzheJosephZhu/MultiDecoderDPRNN',
+            'description': 'AI-powered voice separation for multi-speaker audio',
+            'capabilities': [
+                'Separate multiple human voices from mixed audio',
+                'Auto-detect number of speakers',
+                'Individual gain control per voice',
+                'Re-mixing without re-separation'
+            ],
+            'supported_formats': list(ALLOWED_EXTENSIONS),
+            'cuda_available': torch.cuda.is_available(),
+            'device': 'cuda' if torch.cuda.is_available() else 'cpu',
+            'max_file_size': '200MB',
+            'typical_sources': '2-4 voices',
+            'processing_time': 'Varies by audio length (typically 30s-5min)'
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/voices/list/<path:session_dir>', methods=['GET'])
+def list_voice_sources(session_dir):
+    """
+    List all voice sources in a session directory
+    
+    Returns:
+        JSON with list of voice files and metadata
+    """
+    
+    try:
+        session_path = OUTPUT_FOLDER / session_dir
+        
+        if not session_path.exists():
+            return jsonify({'success': False, 'error': 'Session not found'}), 404
+        
+        sources = []
+        
+        # Find all voice files
+        for voice_file in sorted(session_path.glob('voice_*.wav')):
+            # Get audio info
+            info = sf.info(str(voice_file))
+            
+            sources.append({
+                'name': voice_file.stem,
+                'file': f"{session_dir}/{voice_file.name}",
+                'duration': info.duration,
+                'sample_rate': info.samplerate,
+                'channels': info.channels
+            })
+        
+        # Check for mixed files
+        mixed_files = []
+        for mixed_file in session_path.glob('mixed*.wav'):
+            info = sf.info(str(mixed_file))
+            mixed_files.append({
+                'name': mixed_file.stem,
+                'file': f"{session_dir}/{mixed_file.name}",
+                'duration': info.duration,
+                'sample_rate': info.samplerate,
+                'channels': info.channels
+            })
+        
+        return jsonify({
+            'success': True,
+            'session_dir': session_dir,
+            'num_sources': len(sources),
+            'sources': sources,
+            'mixed_files': mixed_files
+        })
+        
+    except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
 # ============================================================================
@@ -240,6 +560,79 @@ def download_file(filename):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
+@app.route('/api/cleanup', methods=['POST'])
+def manual_cleanup():
+    """Manually trigger cleanup of old files"""
+    try:
+        cleanup_old_files()
+        return jsonify({
+            'success': True,
+            'message': 'Cleanup completed'
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/sessions/list', methods=['GET'])
+def list_sessions():
+    """List all available session directories"""
+    try:
+        sessions = []
+        
+        for item in OUTPUT_FOLDER.iterdir():
+            if item.is_dir():
+                mtime = datetime.fromtimestamp(item.stat().st_mtime)
+                
+                # Determine session type
+                session_type = 'unknown'
+                if item.name.startswith('voices_'):
+                    session_type = 'voice_separation'
+                elif item.name.startswith('instruments_') or any(item.glob('*drums*.wav')):
+                    session_type = 'instrument_separation'
+                
+                sessions.append({
+                    'name': item.name,
+                    'type': session_type,
+                    'created': mtime.isoformat(),
+                    'files': len(list(item.glob('*.wav')))
+                })
+        
+        # Sort by creation time (newest first)
+        sessions.sort(key=lambda x: x['created'], reverse=True)
+        
+        return jsonify({
+            'success': True,
+            'sessions': sessions,
+            'total': len(sessions)
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/sessions/delete/<path:session_dir>', methods=['DELETE'])
+def delete_session(session_dir):
+    """Delete a session directory and all its files"""
+    try:
+        session_path = OUTPUT_FOLDER / session_dir
+        
+        if not session_path.exists():
+            return jsonify({'success': False, 'error': 'Session not found'}), 404
+        
+        # Remove directory and all contents
+        shutil.rmtree(session_path)
+        
+        print(f"🗑️  Deleted session: {session_dir}")
+        
+        return jsonify({
+            'success': True,
+            'message': f'Session {session_dir} deleted'
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 # ============================================================================
 # MAIN
 # ============================================================================
@@ -254,7 +647,8 @@ def main():
     print("🔗 Frontend should connect to this URL")
     print()
     print("✨ Available Features:")
-    print("   • Instrument Separation (AI-powered)")
+    print("   • Instrument Separation (AI-powered, 6 stems)")
+    print("   • Voice Separation (AI-powered, multi-speaker)")
     print("   • Audio Processing & Filtering")
     print("   • Parametric Equalizer")
     print("   • Audio Mixing")
@@ -264,19 +658,45 @@ def main():
     print("⚠️  Requirements:")
     print("   • Virtual environment must be activated")
     print("   • Run: instrument_separation\\Scripts\\activate")
+    print("   • Dependencies: torch, torchaudio, asteroid, demucs")
     print()
     print("🔧 Endpoints:")
+    print()
+    print("   HEALTH & STATUS:")
     print("   GET  /health - Health check")
-    print("   POST /api/separate - Separate instruments")
-    print("   POST /api/audio/load - Load audio file")
-    print("   POST /api/audio/filter - Apply filter")
-    print("   POST /api/audio/equalizer - Apply EQ")
-    print("   POST /api/audio/mix - Mix tracks")
-    print("   POST /api/audio/convert - Convert format")
+    print("   GET  /status/<session_id> - Get processing status")
+    print()
+    print("   INSTRUMENT SEPARATION:")
+    print("   POST /api/separate - Separate instruments (6 stems)")
+    print()
+    print("   VOICE SEPARATION:")
+    print("   POST /api/separate-voices - Separate voices (multi-speaker)")
+    print("   POST /api/voices/adjust-gains - Adjust voice gains")
+    print("   GET  /api/voices/info - Get voice model info")
+    print("   GET  /api/voices/list/<session_dir> - List voice sources")
+    print()
+    print("   FILE MANAGEMENT:")
     print("   GET  /api/download/<file> - Download file")
-    print("   POST /api/cleanup - Clean up files")
+    print("   POST /api/cleanup - Manual cleanup")
+    print("   GET  /api/sessions/list - List all sessions")
+    print("   DEL  /api/sessions/delete/<session_dir> - Delete session")
     print()
     print("=" * 80)
+    print()
+    
+    # Check GPU availability
+    try:
+        import torch
+        if torch.cuda.is_available():
+            print(f"✅ GPU ENABLED: {torch.cuda.get_device_name(0)}")
+            print(f"   VRAM: {torch.cuda.get_device_properties(0).total_memory / 1e9:.2f} GB")
+        else:
+            print("⚠️  GPU NOT AVAILABLE - Using CPU (slower processing)")
+    except:
+        pass
+    
+    print()
+    print("🚀 Starting server...")
     print()
     
     # Run the server
@@ -288,9 +708,12 @@ if __name__ == '__main__':
         import flask
         import flask_cors
         import soundfile
+        import torch
+        import torchaudio
     except ImportError as e:
         print(f"❌ Error: Missing dependency - {e}")
-        print("📦 Install with: pip install flask flask-cors soundfile")
+        print("📦 Install with:")
+        print("   pip install flask flask-cors soundfile torch torchaudio asteroid pytorch-lightning")
         sys.exit(1)
     
     main()

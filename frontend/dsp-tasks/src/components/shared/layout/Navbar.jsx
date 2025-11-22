@@ -10,9 +10,9 @@ import './Navbar.css';
 const navLinks = [
   /*{ title: 'Home', path: '/' },*/
   { title: 'Task 1', path: '/task1' },
-  /*{ title: 'Task 2', path: '/task2' },
+  { title: 'Task 2', path: '/task2' },
   { title: 'Task 3', path: '/task3' },
-  { title: 'Task 4', path: '/task4' },
+  /*{ title: 'Task 4', path: '/task4' },
   { title: 'Task 5', path: '/task5' },
   { title: 'Task 6', path: '/task6' }*/
 ];

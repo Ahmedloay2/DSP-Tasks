@@ -244,3 +244,143 @@ export const STEMS = [
     { id: 'piano', name: 'Piano', icon: '🎹', color: '#98D8C8' },
     { id: 'other', name: 'Other', icon: '🎵', color: '#A8E6CF' },
 ];
+
+// ============================================================================
+// VOICE SEPARATION
+// ============================================================================
+
+/**
+ * Separate audio into individual human voices with AI
+ * @param {File} audioFile - Audio file
+ * @param {Object} gains - Gain settings for each voice source (optional)
+ * @param {Function} onProgress - Progress callback
+ * @param {string} sessionId - Optional session ID
+ * @returns {Promise<Object>}
+ */
+export async function separateVoices(audioFile, gains = {}, onProgress = null, sessionId = null) {
+    try {
+        // Check server
+        const serverRunning = await checkServerStatus();
+        if (!serverRunning) {
+            throw new Error(
+                'Backend server is not running!\n\n' +
+                'Please start the server:\n' +
+                '1. Open terminal in project root\n' +
+                '2. Run: python task3_backend_server.py'
+            );
+        }
+
+        const formData = new FormData();
+        formData.append('audio', audioFile);
+
+        // Add gains if provided
+        Object.entries(gains).forEach(([sourceId, gainValue]) => {
+            formData.append(`source_${sourceId}`, gainValue.toString());
+        });
+
+        // Add session ID
+        if (sessionId) {
+            formData.append('session_id', sessionId);
+        } else {
+            sessionId = Date.now().toString();
+            formData.append('session_id', sessionId);
+        }
+
+        console.log('🎤 Separating voices with AI...');
+
+        // Start separation
+        const response = await fetch(`${SERVER_URL}/api/separate-voices`, {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Voice separation failed');
+        }
+
+        // Get the result first
+        const result = await response.json();
+        console.log('✅ Voice separation complete:', result);
+
+        // Poll for status updates (for progress display)
+        if (onProgress) {
+            onProgress({ stage: 'complete', progress: 1.0, message: 'Voice separation complete!' });
+        }
+
+        // Convert file paths to server URLs
+        if (result.mixed_file) {
+            result.mixed_audio_url = `${SERVER_URL}/api/download/${encodeURIComponent(result.mixed_file)}`;
+        }
+
+        if (result.sources && Array.isArray(result.sources)) {
+            result.source_urls = result.sources.map(source => ({
+                ...source,
+                url: `${SERVER_URL}/api/download/${encodeURIComponent(source.file)}`
+            }));
+        }
+
+        return result;
+
+    } catch (error) {
+        console.error('❌ Error separating voices:', error);
+        throw error;
+    }
+}
+
+/**
+ * Adjust gains for already separated voices without re-separating
+ * @param {string} sessionDir - Session directory name
+ * @param {Object} gains - New gain settings {sourceIndex: gainValue}
+ * @returns {Promise<Object>}
+ */
+export async function adjustVoiceGains(sessionDir, gains) {
+    try {
+        const response = await fetch(`${SERVER_URL}/api/voices/adjust-gains`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                session_dir: sessionDir,
+                gains: gains
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to adjust voice gains');
+        }
+
+        const result = await response.json();
+        console.log('✅ Voice gains adjusted:', result);
+
+        // Convert file path to URL
+        if (result.mixed_file) {
+            result.mixed_audio_url = `${SERVER_URL}/api/download/${encodeURIComponent(result.mixed_file)}`;
+        }
+
+        return result;
+
+    } catch (error) {
+        console.error('❌ Error adjusting voice gains:', error);
+        throw error;
+    }
+}
+
+/**
+ * Get voice separation model information
+ * @returns {Promise<Object>}
+ */
+export async function getVoiceInfo() {
+    try {
+        const response = await fetch(`${SERVER_URL}/api/voices/info`);
+        if (!response.ok) {
+            throw new Error('Failed to get voice info');
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('❌ Error getting voice info:', error);
+        throw error;
+    }
+}
