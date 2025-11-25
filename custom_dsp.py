@@ -1,150 +1,283 @@
 import numpy as np
+from typing import Tuple, Union
 
-class CustomFFT:
-    """
-    Custom Fast Fourier Transform implementation
-    Using Cooley-Tukey FFT algorithm
-    """
+class FFT:
+    def __init__(self):
+        """Initialize FFT with twiddle factor cache"""
+        self._twiddle_cache = {}
     
-    @staticmethod
-    def _bit_reverse_copy(a):
-        """Bit-reverse permutation of array indices"""
-        n = len(a)
-        if n <= 1:
-            return a
+    def _get_twiddle_factors(self, n: int) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Get or create twiddle factors for a given FFT size
+        Twiddle factors are pre-computed e^(-2πi*k/N) values
         
-        # Calculate number of bits needed
-        bits = int(np.log2(n))
+        Args:
+            n: FFT size
+            
+        Returns:
+            Tuple of (cos_table, sin_table)
+        """
+        if n in self._twiddle_cache:
+            return self._twiddle_cache[n]
         
-        # Create reversed array
-        reversed_a = np.zeros(n, dtype=complex)
+        cos_table = np.zeros(n // 2, dtype=np.float32)
+        sin_table = np.zeros(n // 2, dtype=np.float32)
+        
+        for i in range(n // 2):
+            angle = -2 * np.pi * i / n
+            cos_table[i] = np.cos(angle)
+            sin_table[i] = np.sin(angle)
+        
+        self._twiddle_cache[n] = (cos_table, sin_table)
+        return cos_table, sin_table
+    
+    def _bit_reversal_permutation(self, real: np.ndarray, imag: np.ndarray) -> None:
+        """
+        Bit-reversal permutation
+        Rearranges array elements according to bit-reversed indices
+        
+        Args:
+            real: Real part array (modified in-place)
+            imag: Imaginary part array (modified in-place)
+        """
+        n = len(real)
+        num_bits = int(np.log2(n))
+        
         for i in range(n):
-            # Reverse bits
-            reversed_idx = int('{:0{width}b}'.format(i, width=bits)[::-1], 2)
-            reversed_a[reversed_idx] = a[i]
-        
-        return reversed_a
+            # Compute bit-reversed index
+            j = 0
+            for bit in range(num_bits):
+                j = (j << 1) | ((i >> bit) & 1)
+            
+            # Swap if i < j (to avoid double-swapping)
+            if i < j:
+                # Swap real parts
+                real[i], real[j] = real[j], real[i]
+                
+                # Swap imaginary parts
+                imag[i], imag[j] = imag[j], imag[i]
     
-    @staticmethod
-    def fft(x):
+    def _fft_in_place(self, real: np.ndarray, imag: np.ndarray, inverse: bool = False) -> None:
         """
-        Compute FFT using Cooley-Tukey algorithm
+        In-place iterative Cooley-Tukey FFT
         
         Args:
-            x: Input signal (1D array)
+            real: Real part of input signal (modified in-place)
+            imag: Imaginary part of input signal (modified in-place)
+            inverse: If True, compute IFFT instead of FFT
+        """
+        n = len(real)
+        
+        # Bit-reversal permutation
+        self._bit_reversal_permutation(real, imag)
+        
+        # Get twiddle factors
+        cos_table, sin_table = self._get_twiddle_factors(n)
+        
+        # Iterative FFT (Cooley-Tukey decimation-in-time)
+        size = 2
+        while size <= n:
+            half_size = size // 2
+            table_step = n // size
+            
+            for i in range(0, n, size):
+                for j in range(half_size):
+                    k = j * table_step
+                    twiddle_cos = cos_table[k]
+                    twiddle_sin = -sin_table[k] if inverse else sin_table[k]
+                    
+                    even_index = i + j
+                    odd_index = i + j + half_size
+                    
+                    odd_real = real[odd_index]
+                    odd_imag = imag[odd_index]
+                    
+                    # Complex multiplication: twiddle * odd
+                    temp_real = twiddle_cos * odd_real - twiddle_sin * odd_imag
+                    temp_imag = twiddle_cos * odd_imag + twiddle_sin * odd_real
+                    
+                    # Butterfly operation
+                    real[odd_index] = real[even_index] - temp_real
+                    imag[odd_index] = imag[even_index] - temp_imag
+                    real[even_index] = real[even_index] + temp_real
+                    imag[even_index] = imag[even_index] + temp_imag
+            
+            size *= 2
+        
+        # Scale for IFFT
+        if inverse:
+            real /= n
+            imag /= n
+    
+    def fft(self, signal: Union[np.ndarray, list]) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Forward FFT - Optimized API
+        
+        Args:
+            signal: Input signal (1D array or list)
             
         Returns:
-            Complex FFT coefficients
+            Tuple of (real, imag) frequency domain representation
         """
-        x = np.asarray(x, dtype=complex)
-        n = len(x)
+        # Convert to numpy array if needed
+        if not isinstance(signal, np.ndarray):
+            signal = np.array(signal, dtype=np.float32)
+        elif signal.dtype != np.float32:
+            signal = signal.astype(np.float32)
         
-        # Pad to next power of 2
-        if n & (n - 1) != 0:
-            next_pow2 = 2 ** int(np.ceil(np.log2(n)))
-            x = np.pad(x, (0, next_pow2 - n), mode='constant')
-            n = next_pow2
+        n = len(signal)
         
-        # Base case
-        if n <= 1:
-            return x
+        # Ensure power of 2
+        fft_size = 2 ** int(np.ceil(np.log2(n)))
         
-        # Bit-reverse permutation
-        x = CustomFFT._bit_reverse_copy(x)
+        # Allocate arrays
+        real = np.zeros(fft_size, dtype=np.float32)
+        imag = np.zeros(fft_size, dtype=np.float32)
         
-        # Cooley-Tukey FFT
-        # Iterative implementation for better performance
-        stages = int(np.log2(n))
+        # Copy input signal (auto-pads with zeros if needed)
+        real[:n] = signal
         
-        for s in range(1, stages + 1):
-            m = 2 ** s  # Size of sub-DFT
-            wm = np.exp(-2j * np.pi / m)  # Twiddle factor
-            
-            for k in range(0, n, m):
-                w = 1.0
-                for j in range(m // 2):
-                    t = w * x[k + j + m // 2]
-                    u = x[k + j]
-                    x[k + j] = u + t
-                    x[k + j + m // 2] = u - t
-                    w = w * wm
+        # Perform FFT
+        self._fft_in_place(real, imag, False)
         
-        return x
+        return real, imag
     
-    @staticmethod
-    def rfft(x, n=None):
+    def ifft(self, real: np.ndarray, imag: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
-        Real FFT - optimized for real input signals
-        Returns only positive frequencies (like numpy.fft.rfft)
+        Inverse FFT - Optimized API
         
         Args:
-            x: Real input signal
-            n: FFT size (optional, defaults to len(x))
+            real: Real part of frequency domain
+            imag: Imaginary part of frequency domain
             
         Returns:
-            Complex FFT coefficients for positive frequencies
+            Tuple of (real, imag) time domain signal
         """
-        if n is None:
-            n = len(x)
+        # Create copies (IFFT modifies in-place)
+        real_copy = real.copy()
+        imag_copy = imag.copy()
         
-        # Pad or truncate to desired length
-        if len(x) < n:
-            x = np.pad(x, (0, n - len(x)), mode='constant')
-        elif len(x) > n:
-            x = x[:n]
+        # Perform IFFT
+        self._fft_in_place(real_copy, imag_copy, True)
         
-        # Compute full FFT
-        full_fft = CustomFFT.fft(x)
-        
-        # Return only positive frequencies
-        # For real signals, negative frequencies are conjugates
-        return full_fft[:n // 2 + 1]
+        return real_copy, imag_copy
     
-    @staticmethod
-    def ifft(X):
+    def get_magnitude_spectrum(self, real: np.ndarray, imag: np.ndarray) -> np.ndarray:
         """
-        Inverse FFT
+        Get magnitude spectrum from FFT output
         
         Args:
-            X: FFT coefficients
+            real: Real part of FFT
+            imag: Imaginary part of FFT
             
         Returns:
-            Time-domain signal
+            Magnitude spectrum (only positive frequencies)
         """
-        n = len(X)
+        n = len(real)
+        half_n = n // 2
         
-        # Conjugate input
-        X_conj = np.conj(X)
+        magnitudes = np.sqrt(real[:half_n]**2 + imag[:half_n]**2)
         
-        # Apply FFT to conjugate
-        x_conj = CustomFFT.fft(X_conj)
-        
-        # Conjugate and normalize
-        x = np.conj(x_conj) / n
-        
-        return x
+        return magnitudes
     
-    @staticmethod
-    def rfftfreq(n, d=1.0):
+    def get_power_spectrum(self, real: np.ndarray, imag: np.ndarray) -> np.ndarray:
         """
-        Return frequency bins for rfft
+        Get power spectrum from FFT output
         
         Args:
-            n: Number of samples
-            d: Sample spacing (1/sample_rate)
+            real: Real part of FFT
+            imag: Imaginary part of FFT
+            
+        Returns:
+            Power spectrum (only positive frequencies)
+        """
+        magnitudes = self.get_magnitude_spectrum(real, imag)
+        return magnitudes ** 2
+    
+    @staticmethod
+    def get_frequency_bins(fft_size: int, sample_rate: float) -> np.ndarray:
+        """
+        Get frequency bins for FFT output
+        
+        Args:
+            fft_size: FFT size
+            sample_rate: Sample rate in Hz
             
         Returns:
             Array of frequency values
         """
-        val = 1.0 / (n * d)
-        N = n // 2 + 1
-        results = np.arange(0, N, dtype=int)
-        return results * val
+        half_size = fft_size // 2
+        bins = np.arange(half_size, dtype=np.float32) * sample_rate / fft_size
+        
+        return bins
+    
+    @staticmethod
+    def apply_window(signal: Union[np.ndarray, list], 
+                    window_type: str = 'hamming') -> np.ndarray:
+        """
+        Apply window function to signal
+        
+        Args:
+            signal: Input signal
+            window_type: Window type ('hamming', 'hann', 'blackman')
+            
+        Returns:
+            Windowed signal
+        """
+        if not isinstance(signal, np.ndarray):
+            signal = np.array(signal, dtype=np.float32)
+        elif signal.dtype != np.float32:
+            signal = signal.astype(np.float32)
+        
+        n = len(signal)
+        
+        if window_type == 'hamming':
+            window = 0.54 - 0.46 * np.cos(2 * np.pi * np.arange(n) / (n - 1))
+        elif window_type == 'hann':
+            window = 0.5 * (1 - np.cos(2 * np.pi * np.arange(n) / (n - 1)))
+        elif window_type == 'blackman':
+            i = np.arange(n)
+            window = (0.42 - 0.5 * np.cos(2 * np.pi * i / (n - 1)) +
+                     0.08 * np.cos(4 * np.pi * i / (n - 1)))
+        else:
+            window = np.ones(n, dtype=np.float32)
+        
+        return signal * window
+    
+    @staticmethod
+    def freq_to_audiogram_scale(freq: float) -> float:
+        """
+        Convert frequency to Audiogram scale (logarithmic scale)
+        
+        Args:
+            freq: Frequency in Hz
+            
+        Returns:
+            Audiogram scale value
+        """
+        return 1000 * np.log10(freq / 1000 + 1)
+    
+    @staticmethod
+    def audiogram_scale_to_freq(audiogram: float) -> float:
+        """
+        Convert Audiogram scale to frequency
+        
+        Args:
+            audiogram: Audiogram scale value
+            
+        Returns:
+            Frequency in Hz
+        """
+        return 1000 * (10 ** (audiogram / 1000) - 1)
 
 
-class CustomSTFT:
+# Create a global FFT instance for reuse
+_fft_instance = FFT()
+
+
+class STFT:
     """
-    Custom Short-Time Fourier Transform implementation
+    Short-Time Fourier Transform implementation
     """
     
     @staticmethod
@@ -199,8 +332,10 @@ class CustomSTFT:
             # Apply window
             windowed_frame = frame * win
             
-            # Compute FFT of windowed frame
-            fft_frame = CustomFFT.rfft(windowed_frame, n=n_fft)
+            # Compute FFT of windowed frame using optimized FFT
+            real, imag = _fft_instance.fft(windowed_frame)
+            # Convert to complex and take only positive frequencies (rfft equivalent)
+            fft_frame = real[:n_freq_bins] + 1j * imag[:n_freq_bins]
             stft_matrix[:, frame_idx] = fft_frame
         
         return stft_matrix
@@ -250,8 +385,11 @@ class CustomSTFT:
                 np.conj(stft_matrix[-2:0:-1, frame_idx])
             ])
             
-            # Inverse FFT
-            frame = np.real(CustomFFT.ifft(full_fft))[:n_fft]
+            # Inverse FFT using optimized FFT
+            real_part = np.real(full_fft).astype(np.float32)
+            imag_part = np.imag(full_fft).astype(np.float32)
+            frame_real, frame_imag = _fft_instance.ifft(real_part, imag_part)
+            frame = frame_real[:n_fft]
             
             # Apply window and add to output
             y[start:start + n_fft] += frame * win
@@ -292,7 +430,7 @@ class CustomSpectrogram:
             hop_length = n_fft // 4
         
         # Compute STFT
-        stft_matrix = CustomSTFT.stft(x, n_fft=n_fft, hop_length=hop_length, window=window)
+        stft_matrix = STFT.stft(x, n_fft=n_fft, hop_length=hop_length, window=window)
         
         # Compute magnitude
         magnitude = np.abs(stft_matrix)
