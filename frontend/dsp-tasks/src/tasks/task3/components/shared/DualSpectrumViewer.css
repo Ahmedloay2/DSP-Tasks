@@ -19,6 +19,22 @@
   margin-bottom: 20px;
 }
 
+.dual-spectrum-container.side-by-side {
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.spectrum-viewer-inline {
+  flex: 1;
+  min-width: 0;
+}
+
+.spectrum-container-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
 .spectrum-panel {
   background: var(--bg-tertiary, #334155);
   border-radius: 12px;

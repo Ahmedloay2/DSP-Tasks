@@ -10,7 +10,12 @@ import './DualSpectrumViewer.css';
 export default function DualSpectrumViewer({
   originalSignal = [],
   processedSignal = [],
-  sampleRate = 44100
+  sampleRate = 44100,
+  showInput = true,
+  showOutput = true,
+  title = "Frequency Spectrum Comparison",
+  inline = false,
+  audiogramOnly = false
 }) {
   const linearCanvasRef = useRef(null);
   const audiogramCanvasRef = useRef(null);
@@ -69,6 +74,13 @@ export default function DualSpectrumViewer({
       if (magnitudes[i] > maxMag) maxMag = magnitudes[i];
     }
 
+    // Set a minimum threshold for maxMag to avoid over-amplifying noise
+    // If maxMag is below this threshold, treat it as effectively zero
+    const MIN_MAGNITUDE_THRESHOLD = 0.001;
+    if (maxMag < MIN_MAGNITUDE_THRESHOLD) {
+      maxMag = 1.0; // Use 1.0 so that the tiny magnitudes stay near zero
+    }
+
     // For audiogram scale, use standard audiometry frequency points
     if (scale === 'audiogram') {
       const audiogramFreqs = [250, 500, 1000, 2000, 4000, 8000];
@@ -91,7 +103,7 @@ export default function DualSpectrumViewer({
 
         const x = (Math.log10(targetFreq + 1) / Math.log10(maxFreq)) * width;
         // Better scaling with zoom: magnitudes scale vertically with zoom for better visibility
-        const normalizedMag = magnitudes[closestIdx] / (maxMag || 1);
+        const normalizedMag = magnitudes[closestIdx] / maxMag;
         const verticalScale = Math.min(zoomLevel, 1.5); // Cap vertical scaling at 1.5x
         const y = height * 0.95 - (normalizedMag * height * 0.85 * verticalScale) - panY;
 
@@ -129,7 +141,7 @@ export default function DualSpectrumViewer({
 
         const x = (freq / maxFreq) * width;
         // Better scaling with zoom: magnitudes scale vertically with zoom for better visibility
-        const normalizedMag = magnitudes[i] / (maxMag || 1);
+        const normalizedMag = magnitudes[i] / maxMag;
         const verticalScale = Math.min(zoomLevel, 1.5); // Cap vertical scaling at 1.5x
         const y = height * 0.95 - (normalizedMag * height * 0.85 * verticalScale) - panY;
 
@@ -248,8 +260,10 @@ export default function DualSpectrumViewer({
     drawGrid(ctx, width, height, 'linear');
 
     // Draw spectrums
-    drawSpectrumLine(ctx, origSpectrum, width, height, '#3b82f6', 'linear'); // Original (blue)
-    if (procSpectrum) {
+    if (showInput) {
+      drawSpectrumLine(ctx, origSpectrum, width, height, '#3b82f6', 'linear'); // Original (blue)
+    }
+    if (showOutput && procSpectrum) {
       drawSpectrumLine(ctx, procSpectrum, width, height, '#10b981', 'linear'); // Processed (green)
     }
 
@@ -281,8 +295,10 @@ export default function DualSpectrumViewer({
     drawGrid(ctx, width, height, 'audiogram');
 
     // Draw spectrums
-    drawSpectrumLine(ctx, origSpectrum, width, height, '#3b82f6', 'audiogram'); // Original (blue)
-    if (procSpectrum) {
+    if (showInput) {
+      drawSpectrumLine(ctx, origSpectrum, width, height, '#3b82f6', 'audiogram'); // Original (blue)
+    }
+    if (showOutput && procSpectrum) {
       drawSpectrumLine(ctx, procSpectrum, width, height, '#10b981', 'audiogram'); // Processed (green)
     }
 
@@ -294,12 +310,24 @@ export default function DualSpectrumViewer({
   useEffect(() => {
     if (originalSignal && originalSignal.length > 0) {
       const timeoutId = setTimeout(() => {
-        if (showLinear) drawLinearSpectrum();
-        if (showAudiogram) drawAudiogramSpectrum();
+        // Draw linear spectrum if needed
+        if (!audiogramOnly) {
+          if (inline || showLinear) {
+            drawLinearSpectrum();
+          }
+        }
+        // Draw audiogram spectrum if needed
+        if (audiogramOnly) {
+          // When audiogramOnly is true, always draw audiogram
+          drawAudiogramSpectrum();
+        } else if (!inline && showAudiogram) {
+          // When not inline and showAudiogram is true, draw audiogram
+          drawAudiogramSpectrum();
+        }
       }, 100);
       return () => clearTimeout(timeoutId);
     }
-  }, [originalSignal, processedSignal, sampleRate, showLinear, showAudiogram, zoomLevel, panX, panY, drawLinearSpectrum, drawAudiogramSpectrum]);
+  }, [originalSignal, processedSignal, sampleRate, showLinear, showAudiogram, zoomLevel, panX, panY, drawLinearSpectrum, drawAudiogramSpectrum, audiogramOnly, inline]);
 
   /*const handleMouseDown = (e) => {
     setIsDragging(true);
@@ -336,89 +364,115 @@ export default function DualSpectrumViewer({
   };
 
   return (
-    <section className="dual-spectrum-viewer">
-      <h2>Frequency Spectrum Comparison</h2>
+    <section className={inline ? "spectrum-viewer-inline" : "dual-spectrum-viewer"}>
+      {!inline && <h2>{title}</h2>}
 
-      <div className="dual-spectrum-container">
+      <div className={inline ? "spectrum-container-inline" : "dual-spectrum-container"}>
         {/* Linear Scale */}
-        <div className="spectrum-panel">
-          <div className="spectrum-panel-header">
-            <h3>Linear Scale</h3>
-            <div className="spectrum-controls">
-              <button className="reset-view-btn" onClick={resetView}>
-                <span>🔄</span> Reset View
-              </button>
-              <label className="show-hide-toggle">
-                <input
-                  type="checkbox"
-                  checked={showLinear}
-                  onChange={(e) => setShowLinear(e.target.checked)}
-                />
-                <span className="toggle-slider"></span>
-                <span className="toggle-label">Show</span>
-              </label>
-            </div>
-          </div>
-          {showLinear && (
-            <div className="spectrum-wrapper">
-              <canvas
-                ref={linearCanvasRef}
+        {!audiogramOnly && (
+          <div className="spectrum-panel">
+            {inline && (
+              <div className="spectrum-panel-header">
+                <h3>{title}</h3>
+              </div>
+            )}
+            {!inline && (
+              <div className="spectrum-panel-header">
+                <h3>Linear Scale</h3>
+                <div className="spectrum-controls">
+                  <button className="reset-view-btn" onClick={resetView}>
+                    <span>🔄</span> Reset View
+                  </button>
+                  <label className="show-hide-toggle">
+                    <input
+                      type="checkbox"
+                      checked={showLinear}
+                      onChange={(e) => setShowLinear(e.target.checked)}
+                    />
+                    <span className="toggle-slider"></span>
+                    <span className="toggle-label">Show</span>
+                  </label>
+                </div>
+              </div>
+            )}
+            {(inline || showLinear) && (
+              <div className="spectrum-wrapper">
+                <canvas
+                  ref={linearCanvasRef}
                 /*onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
                 onWheel={handleWheel}*/
-              />
-            </div>
-          )}
-        </div>
+                />
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Audiogram Scale */}
-        <div className="spectrum-panel">
-          <div className="spectrum-panel-header">
-            <h3>Audiogram Scale</h3>
-            <div className="spectrum-controls">
-              <button className="reset-view-btn" onClick={resetView}>
-                <span>🔄</span> Reset View
-              </button>
-              <label className="show-hide-toggle">
-                <input
-                  type="checkbox"
-                  checked={showAudiogram}
-                  onChange={(e) => setShowAudiogram(e.target.checked)}
-                />
-                <span className="toggle-slider"></span>
-                <span className="toggle-label">Show</span>
-              </label>
-            </div>
-          </div>
-          {showAudiogram && (
-            <div className="spectrum-wrapper">
-              <canvas
-                ref={audiogramCanvasRef}
+        {(audiogramOnly || !inline) && (
+          <div className="spectrum-panel">
+            {inline && (
+              <div className="spectrum-panel-header">
+                <h3>{title}</h3>
+              </div>
+            )}
+            {!inline && (
+              <div className="spectrum-panel-header">
+                <h3>Audiogram Scale</h3>
+                <div className="spectrum-controls">
+                  <button className="reset-view-btn" onClick={resetView}>
+                    <span>🔄</span> Reset View
+                  </button>
+                  <label className="show-hide-toggle">
+                    <input
+                      type="checkbox"
+                      checked={showAudiogram}
+                      onChange={(e) => setShowAudiogram(e.target.checked)}
+                    />
+                    <span className="toggle-slider"></span>
+                    <span className="toggle-label">Show</span>
+                  </label>
+                </div>
+              </div>
+            )}
+            {(inline || showAudiogram) && (
+              <div className="spectrum-wrapper">
+                <canvas
+                  ref={audiogramCanvasRef}
                 /*onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
                 onWheel={handleWheel}*/
-              />
-            </div>
-          )}
-        </div>
+                />
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      <div className="spectrum-legend">
-        <span className="legend-item">
-          <span className="legend-color original"></span> Original
-        </span>
-        <span className="legend-item">
-          <span className="legend-color processed"></span> Processed
-        </span>
-      </div>
+      {!inline && (
+        <>
+          <div className="spectrum-legend">
+            {showInput && (
+              <span className="legend-item">
+                <span className="legend-color original"></span> {showOutput ? 'Input' : 'Original'}
+              </span>
+            )}
+            {showOutput && (
+              <span className="legend-item">
+                <span className="legend-color processed"></span> {showInput ? 'Output' : 'Processed'}
+              </span>
+            )}
+          </div>
 
-      <div className="spectrum-controls-info">
-        <p><strong>Controls:</strong> Click & Drag to Pan | Scroll to Zoom | Double-click to Reset</p>
-      </div>
+          <div className="spectrum-controls-info">
+            <p><strong>Controls:</strong> Click & Drag to Pan | Scroll to Zoom | Double-click to Reset</p>
+          </div>
+        </>
+      )}
     </section>
   );
 }

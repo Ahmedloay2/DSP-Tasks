@@ -239,17 +239,28 @@ export function analyzeSpectrum(signal, sampleRate) {
     return { frequencies: [], magnitudes: [] };
   }
 
-  // Limit signal size for performance (downsample if necessary)
+  // Adaptive FFT size based on signal length
+  // Use power of 2 for FFT efficiency, but adapt to signal characteristics
+  let fftSize;
+  if (signal.length < 2048) {
+    fftSize = 1024;
+  } else if (signal.length < 8192) {
+    fftSize = 2048;
+  } else if (signal.length < 32768) {
+    fftSize = 8192;
+  } else if (signal.length < 131072) {
+    fftSize = 32768;
+  } else {
+    fftSize = 65536; // 64K max for very long signals
+  }
+
+  // Ensure we don't exceed signal length
+  fftSize = Math.min(fftSize, signal.length);
+
+  // Limit signal size for performance (take first fftSize samples)
   let processSignal = signal;
-  const maxSamples = 65536; // 64K samples max for spectrum analysis
-  if (signal.length > maxSamples) {
-    const step = Math.ceil(signal.length / maxSamples);
-    const downsampledLength = Math.floor(signal.length / step);
-    const downsampled = new Float32Array(downsampledLength);
-    for (let i = 0, j = 0; i < signal.length; i += step, j++) {
-      downsampled[j] = signal[i];
-    }
-    processSignal = downsampled;
+  if (signal.length > fftSize) {
+    processSignal = signal.slice(0, fftSize);
   }
 
   // Convert to Float32Array if needed
@@ -265,9 +276,11 @@ export function analyzeSpectrum(signal, sampleRate) {
   const frequencies = new Array(halfN);
   const magnitudes = new Array(halfN);
 
+  // Calculate magnitudes with proper scaling
+  const scale = 2.0 / N; // Normalization factor
   for (let i = 0; i < halfN; i++) {
     frequencies[i] = (i * sampleRate) / N;
-    magnitudes[i] = Math.sqrt(real[i] * real[i] + imag[i] * imag[i]);
+    magnitudes[i] = Math.sqrt(real[i] * real[i] + imag[i] * imag[i]) * scale;
   }
 
   return { frequencies, magnitudes };

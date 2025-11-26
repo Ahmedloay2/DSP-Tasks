@@ -33,9 +33,22 @@ export default function SpectrogramViewer({
     ctx.fillStyle = '#0f172a';
     ctx.fillRect(0, 0, width, height);
 
-    // OPTIMIZED: Increased window and hop sizes for faster processing
-    const windowSize = 2048; // Increased from 1024
-    const hopSize = 1024;    // Increased from 256 (4x faster)
+    // ADAPTIVE: Adjust window size based on signal length and sample rate
+    let windowSize;
+    const signalDuration = signal.length / sampleRate; // in seconds
+
+    if (signalDuration < 1) {
+      windowSize = 512;  // Short signals need smaller windows for temporal resolution
+    } else if (signalDuration < 5) {
+      windowSize = 1024;
+    } else if (signalDuration < 30) {
+      windowSize = 2048;
+    } else {
+      windowSize = 4096; // Longer signals can use larger windows for better frequency resolution
+    }
+
+    // Adaptive hop size (50% overlap is standard, but adjust for long signals)
+    const hopSize = Math.floor(windowSize / 2);
 
     // Limit number of windows for very long signals
     const maxWindows = 800;
