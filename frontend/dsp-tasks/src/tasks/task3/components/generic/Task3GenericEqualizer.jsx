@@ -399,17 +399,18 @@ export default function Task3GenericEqualizer() {
                     <div className="subdivisions-list">
                         {config && config.subdivisions.map((sub, index) => (
                             <div key={index} className="subdivision-item">
+                                <button
+                                    className="remove-icon-btn"
+                                    onClick={() => handleRemoveBand(index)}
+                                    title="Remove this band"
+                                    aria-label="Remove band"
+                                >
+                                    ✕
+                                </button>
                                 <div className="subdivision-header">
                                     <span className="subdivision-title">
                                         Band {index + 1}: {sub.startFreq} Hz - {sub.endFreq} Hz
                                     </span>
-                                    <button
-                                        className="remove-btn"
-                                        onClick={() => handleRemoveBand(index)}
-                                        title="Remove this band"
-                                    >
-                                        ❌ Remove
-                                    </button>
                                 </div>
                                 <div className="subdivision-controls">
                                     <div className="slider-group">

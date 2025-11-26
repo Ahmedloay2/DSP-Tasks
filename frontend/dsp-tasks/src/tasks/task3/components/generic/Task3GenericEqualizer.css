@@ -90,6 +90,47 @@
   padding: 20px;
   border-radius: 10px;
   border: 1px solid var(--border-color, #475569);
+  position: relative;
+  transition: border-color 0.3s ease;
+}
+
+.subdivision-item:hover {
+  border-color: var(--primary-color, #6366f1);
+}
+
+.remove-icon-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.9);
+  color: white;
+  border: none;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.subdivision-item:hover .remove-icon-btn {
+  opacity: 1;
+}
+
+.remove-icon-btn:hover {
+  background: rgba(220, 38, 38, 1);
+  transform: scale(1.1);
+}
+
+.remove-icon-btn:active {
+  transform: scale(0.95);
 }
 
 .subdivision-header {

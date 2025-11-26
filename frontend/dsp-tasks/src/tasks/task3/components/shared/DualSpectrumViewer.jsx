@@ -217,6 +217,9 @@ export default function DualSpectrumViewer({
     const width = canvas.width = canvas.offsetWidth;
     const height = canvas.height = canvas.offsetHeight;
 
+    // Don't draw if canvas has no size
+    if (width === 0 || height === 0) return;
+
     ctx.clearRect(0, 0, width, height);
     ctx.fillStyle = '#0f172a';
     ctx.fillRect(0, 0, width, height);
@@ -256,20 +259,105 @@ export default function DualSpectrumViewer({
       procSpectrum = null;
     }
 
-    // Draw grid
-    drawGrid(ctx, width, height, 'linear');
+    // Draw grid with better styling
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
 
-    // Draw spectrums
-    if (showInput) {
-      drawSpectrumLine(ctx, origSpectrum, width, height, '#3b82f6', 'linear'); // Original (blue)
+    // Horizontal grid lines
+    for (let i = 0; i <= 10; i++) {
+      const y = (i / 10) * height;
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(width, y);
+      ctx.stroke();
     }
+
+    // Vertical grid lines
+    for (let i = 0; i <= 10; i++) {
+      const x = (i / 10) * width;
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, height);
+      ctx.stroke();
+    }
+
+    // Draw frequency labels on x-axis
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Arial';
+    ctx.textAlign = 'center';
+    const maxFreq = sampleRate / 2;
+    for (let i = 0; i <= 10; i++) {
+      const freq = (i / 10) * maxFreq;
+      const x = (i / 10) * width;
+      const label = freq >= 1000 ? `${(freq / 1000).toFixed(1)}k` : `${Math.round(freq)}`;
+      ctx.fillText(label, x, height - 5);
+    }
+
+    // Draw magnitude labels on y-axis
+    ctx.textAlign = 'left';
+    for (let i = 0; i <= 10; i++) {
+      const y = (i / 10) * height;
+      const value = (1 - i / 10).toFixed(1);
+      ctx.fillText(value, 5, y + 4);
+    }
+
+    // Draw axis labels
+    ctx.font = 'bold 12px Arial';
+    ctx.fillStyle = '#cbd5e1';
+    ctx.textAlign = 'center';
+    ctx.fillText('Frequency (Hz)', width / 2, height - 20);
+    ctx.save();
+    ctx.translate(20, height / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('Magnitude', 0, 0);
+    ctx.restore();
+
+    // Draw spectrums with improved rendering
+    const drawSpectrum = (spectrum, color, lineWidth = 2) => {
+      const { frequencies, magnitudes } = spectrum;
+
+      // Find max magnitude with threshold
+      let maxMag = 0;
+      for (let i = 0; i < magnitudes.length; i++) {
+        if (magnitudes[i] > maxMag) maxMag = magnitudes[i];
+      }
+
+      const MIN_THRESHOLD = 0.001;
+      if (maxMag < MIN_THRESHOLD) maxMag = 1.0;
+
+      ctx.strokeStyle = color;
+      ctx.lineWidth = lineWidth;
+      ctx.beginPath();
+
+      let firstPoint = true;
+      for (let i = 0; i < frequencies.length; i++) {
+        const freq = frequencies[i];
+        if (freq > maxFreq) break;
+
+        const x = (freq / maxFreq) * width;
+        const normalizedMag = magnitudes[i] / maxMag;
+        const y = height - (normalizedMag * height * 0.9) - height * 0.05;
+
+        if (firstPoint) {
+          ctx.moveTo(x, y);
+          firstPoint = false;
+        } else {
+          ctx.lineTo(x, y);
+        }
+      }
+      ctx.stroke();
+    };
+
+    // Draw input spectrum
+    if (showInput && origSpectrum) {
+      drawSpectrum(origSpectrum, '#3b82f6', 2.5);
+    }
+
+    // Draw output spectrum
     if (showOutput && procSpectrum) {
-      drawSpectrumLine(ctx, procSpectrum, width, height, '#10b981', 'linear'); // Processed (green)
+      drawSpectrum(procSpectrum, '#10b981', 2.5);
     }
-
-    // Draw labels
-    drawLabels(ctx, width, height, 'linear');
-  }, [originalSignal, processedSignal, sampleRate, zoomLevel, panX, panY]);
+  }, [originalSignal, processedSignal, sampleRate, showInput, showOutput]);
 
   const drawAudiogramSpectrum = useCallback(() => {
     const canvas = audiogramCanvasRef.current;
@@ -279,55 +367,194 @@ export default function DualSpectrumViewer({
     const width = canvas.width = canvas.offsetWidth;
     const height = canvas.height = canvas.offsetHeight;
 
+    // Don't draw if canvas has no size
+    if (width === 0 || height === 0) return;
+
     ctx.clearRect(0, 0, width, height);
     ctx.fillStyle = '#0f172a';
     ctx.fillRect(0, 0, width, height);
 
     if (!originalSignal || originalSignal.length === 0) return;
 
-    // Reuse cached spectrum data
-    const origSpectrum = spectrumCacheRef.current.orig;
-    const procSpectrum = spectrumCacheRef.current.proc;
+    // Helper function to create a robust hash from signal
+    const createSignalHash = (signal) => {
+      if (!signal || signal.length === 0) return 0;
+      let hash = signal.length;
+      for (let i = 0; i < 10; i++) {
+        const idx = Math.floor((i / 10) * signal.length);
+        hash += signal[idx] * (i + 1);
+      }
+      return hash;
+    };
+
+    // Ensure spectrum data is computed (not just reusing cache)
+    let origSpectrum = spectrumCacheRef.current.orig;
+    const origSignalHash = createSignalHash(originalSignal);
+    if (!origSpectrum || spectrumCacheRef.current.origSignal !== origSignalHash) {
+      origSpectrum = analyzeSpectrum(originalSignal, sampleRate);
+      spectrumCacheRef.current.orig = origSpectrum;
+      spectrumCacheRef.current.origSignal = origSignalHash;
+    }
+
+    let procSpectrum = spectrumCacheRef.current.proc;
+    if (processedSignal && processedSignal.length > 0) {
+      const procSignalHash = createSignalHash(processedSignal);
+      if (!procSpectrum || spectrumCacheRef.current.procSignal !== procSignalHash) {
+        procSpectrum = analyzeSpectrum(processedSignal, sampleRate);
+        spectrumCacheRef.current.proc = procSpectrum;
+        spectrumCacheRef.current.procSignal = procSignalHash;
+      }
+    } else {
+      procSpectrum = null;
+    }
 
     if (!origSpectrum) return;
 
+    const maxFreq = sampleRate / 2;
+    const audiogramFreqs = [250, 500, 1000, 2000, 4000, 8000];
+
     // Draw grid
-    drawGrid(ctx, width, height, 'audiogram');
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
 
-    // Draw spectrums
-    if (showInput) {
-      drawSpectrumLine(ctx, origSpectrum, width, height, '#3b82f6', 'audiogram'); // Original (blue)
+    // Horizontal grid lines
+    for (let i = 0; i <= 10; i++) {
+      const y = (i / 10) * height;
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(width, y);
+      ctx.stroke();
     }
+
+    // Vertical grid lines at audiogram frequencies
+    audiogramFreqs.forEach(freq => {
+      const x = (Math.log10(freq) / Math.log10(maxFreq)) * width;
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, height);
+      ctx.stroke();
+    });
+
+    // Draw frequency labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Arial';
+    ctx.textAlign = 'center';
+    audiogramFreqs.forEach(freq => {
+      const x = (Math.log10(freq) / Math.log10(maxFreq)) * width;
+      const label = freq >= 1000 ? `${freq / 1000}k` : `${freq}`;
+      ctx.fillText(label, x, height - 5);
+    });
+
+    // Draw magnitude labels on y-axis
+    ctx.textAlign = 'left';
+    for (let i = 0; i <= 10; i++) {
+      const y = (i / 10) * height;
+      const value = (1 - i / 10).toFixed(1);
+      ctx.fillText(value, 5, y + 4);
+    }
+
+    // Draw axis labels
+    ctx.font = 'bold 12px Arial';
+    ctx.fillStyle = '#cbd5e1';
+    ctx.textAlign = 'center';
+    ctx.fillText('Frequency (Hz)', width / 2, height - 20);
+    ctx.save();
+    ctx.translate(20, height / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('Magnitude', 0, 0);
+    ctx.restore();
+
+    // Draw audiogram spectrum
+    const drawAudiogramData = (spectrum, color) => {
+      const { frequencies, magnitudes } = spectrum;
+
+      // Find max magnitude with threshold
+      let maxMag = 0;
+      for (let i = 0; i < magnitudes.length; i++) {
+        if (magnitudes[i] > maxMag) maxMag = magnitudes[i];
+      }
+
+      const MIN_THRESHOLD = 0.001;
+      if (maxMag < MIN_THRESHOLD) maxMag = 1.0;
+
+      const points = [];
+
+      // Sample magnitudes at audiogram frequencies
+      audiogramFreqs.forEach(targetFreq => {
+        let closestIdx = 0;
+        let minDiff = Math.abs(frequencies[0] - targetFreq);
+
+        for (let i = 1; i < frequencies.length; i++) {
+          const diff = Math.abs(frequencies[i] - targetFreq);
+          if (diff < minDiff) {
+            minDiff = diff;
+            closestIdx = i;
+          }
+          if (frequencies[i] > targetFreq) break;
+        }
+
+        const x = (Math.log10(targetFreq) / Math.log10(maxFreq)) * width;
+        const normalizedMag = magnitudes[closestIdx] / maxMag;
+        const y = height - (normalizedMag * height * 0.9) - height * 0.05;
+
+        points.push({ x, y });
+      });
+
+      // Draw lines connecting points
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      points.forEach((point, i) => {
+        if (i === 0) {
+          ctx.moveTo(point.x, point.y);
+        } else {
+          ctx.lineTo(point.x, point.y);
+        }
+      });
+      ctx.stroke();
+
+      // Draw marker circles
+      ctx.fillStyle = color;
+      points.forEach(point => {
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, 5, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      });
+    };
+
+    // Draw input spectrum
+    if (showInput && origSpectrum) {
+      drawAudiogramData(origSpectrum, '#3b82f6');
+    }
+
+    // Draw output spectrum
     if (showOutput && procSpectrum) {
-      drawSpectrumLine(ctx, procSpectrum, width, height, '#10b981', 'audiogram'); // Processed (green)
+      drawAudiogramData(procSpectrum, '#10b981');
     }
-
-    // Draw labels
-    drawLabels(ctx, width, height, 'audiogram');
-  }, [originalSignal, processedSignal, sampleRate, zoomLevel, panX, panY]);
+  }, [originalSignal, processedSignal, sampleRate, showInput, showOutput]);
 
   // Effect to draw spectrums when data changes
   useEffect(() => {
     if (originalSignal && originalSignal.length > 0) {
-      const timeoutId = setTimeout(() => {
-        // Draw linear spectrum if needed
+      // Use requestAnimationFrame for smooth rendering
+      const rafId = requestAnimationFrame(() => {
+        // Draw linear spectrum if not audiogram-only mode
         if (!audiogramOnly) {
-          if (inline || showLinear) {
-            drawLinearSpectrum();
-          }
+          drawLinearSpectrum();
         }
-        // Draw audiogram spectrum if needed
+
+        // Draw audiogram spectrum if in audiogram mode
         if (audiogramOnly) {
-          // When audiogramOnly is true, always draw audiogram
-          drawAudiogramSpectrum();
-        } else if (!inline && showAudiogram) {
-          // When not inline and showAudiogram is true, draw audiogram
           drawAudiogramSpectrum();
         }
-      }, 100);
-      return () => clearTimeout(timeoutId);
+      });
+
+      return () => cancelAnimationFrame(rafId);
     }
-  }, [originalSignal, processedSignal, sampleRate, showLinear, showAudiogram, zoomLevel, panX, panY, drawLinearSpectrum, drawAudiogramSpectrum, audiogramOnly, inline]);
+  }, [originalSignal, processedSignal, sampleRate, showInput, showOutput, audiogramOnly, drawLinearSpectrum, drawAudiogramSpectrum]);
 
   /*const handleMouseDown = (e) => {
     setIsDragging(true);
