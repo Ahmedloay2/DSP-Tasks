@@ -666,17 +666,144 @@ def upload_wav_and_fft():
             _fft_instance = FFT()
             real_fft, imag_fft = _fft_instance.fft(data)
 
-            # Convert numpy arrays to lists for JSON serialization
-            real_fft_list = real_fft.tolist()
-            imag_fft_list = imag_fft.tolist()
+            # Reconstruct complex spectrum
+            real_fft = np.asarray(real_fft, dtype=np.float32)
+            imag_fft = np.asarray(imag_fft, dtype=np.float32)
+            complex_fft = real_fft + 1j * imag_fft
 
-            return jsonify({
+            # Parse frequency adjustments (supports JSON body or form fields 'adjustments' or 'bands')
+            adjustments = None
+            bands = None
+            try:
+                j = request.get_json(silent=True) or {}
+            except Exception:
+                j = {}
+
+            # Support either top-level 'bands' (list) or 'adjustments' (dict)
+            if isinstance(j, dict):
+                if 'bands' in j:
+                    bands = j.get('bands')
+                if 'adjustments' in j:
+                    adjustments = j.get('adjustments')
+
+            # Fallback to form fields
+            if adjustments is None and bands is None:
+                adjustments_field = request.form.get('adjustments')
+                bands_field = request.form.get('bands')
+                if bands_field:
+                    try:
+                        bands = json.loads(bands_field)
+                    except Exception:
+                        bands = None
+                elif adjustments_field:
+                    try:
+                        adjustments = json.loads(adjustments_field)
+                    except Exception:
+                        adjustments = None
+
+            applied = []
+            N = len(complex_fft)
+
+            # Handle single-frequency adjustments given as a dict {"440": 0.5, ...}
+            if adjustments and isinstance(adjustments, dict):
+                for freq_str, gain_val in adjustments.items():
+                    try:
+                        freq = float(freq_str)
+                        gain = float(gain_val)
+                    except Exception:
+                        continue
+
+                    k = int(round(freq * N / float(samplerate)))
+                    if k < 0 or k >= N:
+                        continue
+
+                    mirror = (-k) % N
+                    complex_fft[k] *= gain
+                    if mirror != k:
+                        complex_fft[mirror] *= gain
+
+                    applied.append({'type': 'freq', 'frequency_hz': freq, 'bin': k, 'gain': gain})
+
+            # Handle bands: list of {"low": <Hz>, "high": <Hz>, "gain": <value>}
+            if bands and isinstance(bands, (list, tuple)):
+                for band in bands:
+                    if not isinstance(band, dict):
+                        continue
+                    try:
+                        low = float(band.get('low', band.get('f0', 0.0)))
+                        high = float(band.get('high', band.get('f1', low)))
+                        gain = float(band.get('gain', band.get('g', 1.0)))
+                    except Exception:
+                        continue
+
+                    if low > high:
+                        low, high = high, low
+
+                    k_low = int(np.floor(low * N / float(samplerate)))
+                    k_high = int(np.ceil(high * N / float(samplerate)))
+
+                    k_low = max(0, k_low)
+                    k_high = min(N - 1, k_high)
+
+                    if k_low > k_high:
+                        continue
+
+                    # Apply gain across the band (and mirrored bins)
+                    for k in range(k_low, k_high + 1):
+                        complex_fft[k] *= gain
+                        mirror = (-k) % N
+                        if mirror != k:
+                            complex_fft[mirror] *= gain
+
+                    applied.append({'type': 'band', 'low_hz': low, 'high_hz': high, 'bins': [k_low, k_high], 'gain': gain})
+
+            # Prepare outputs
+            modified_real = np.real(complex_fft)
+            modified_imag = np.imag(complex_fft)
+
+            # Optionally return an inverse-transformed WAV file if requested
+            return_wav = False
+            # check JSON body or form flag
+            try:
+                body = request.get_json(silent=True) or {}
+                return_wav = bool(body.get('return_wav', False))
+            except Exception:
+                return_wav = False
+
+            response = {
                 "status": "success",
-                "fft_real": real_fft_list,
-                "fft_imag": imag_fft_list,
+                "fft_real": modified_real.tolist(),
+                "fft_imag": modified_imag.tolist(),
                 "sample_rate": samplerate,
-                "fft_size": len(real_fft)
-            })
+                "fft_size": N,
+                "applied_adjustments": applied
+            }
+
+            if return_wav:
+                try:
+                    # Inverse transform to time domain and save to a temporary file
+                    time_signal = np.fft.ifft(complex_fft).real
+
+                    # Normalize if necessary to avoid clipping when saving
+                    max_val = np.abs(time_signal).max()
+                    if max_val > 0:
+                        scale = 0.99 / max_val
+                        time_signal = (time_signal * scale).astype(np.float32)
+                    else:
+                        time_signal = time_signal.astype(np.float32)
+
+                    ts = int(time.time())
+                    out_name = f"modified_{ts}.wav"
+                    out_path = OUTPUT_FOLDER / out_name
+                    # Use soundfile to write the WAV
+                    sf.write(str(out_path), time_signal, samplerate, subtype='PCM_16')
+
+                    response['modified_wav'] = f"{out_name}"
+                    response['modified_wav_path'] = str(out_path)
+                except Exception as e:
+                    response['modified_wav_error'] = str(e)
+
+            return jsonify(response)
 
         except Exception as e:
             return jsonify({"error": f"Processing failed: {str(e)}"}), 500
