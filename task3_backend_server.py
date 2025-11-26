@@ -10,6 +10,8 @@ from pathlib import Path
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
 import threading
+import io
+from scipy.io import wavfile
 
 import numpy as np
 import soundfile as sf
@@ -19,6 +21,8 @@ from instruments_separation import InstrumentSeparator
 
 # Import the voice separator
 from voice_separation import VoiceSeparator
+
+from custom_dsp import FFT
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for React frontend
@@ -632,6 +636,52 @@ def delete_session(session_dir):
         
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+#===================================================================
+# Fast fourier transform
+#===================================
+@app.route('/upload_wav_and_fft', methods=['POST'])
+def upload_wav_and_fft():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part in the request"}), 400
+
+    file = request.files['file']
+
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+
+    if file:
+        try:
+            # Read the WAV file from the in-memory file object
+            samplerate, data = wavfile.read(io.BytesIO(file.read()))
+
+            # If stereo, take only one channel
+            if data.ndim > 1:
+                data = data[:, 0]
+
+            # Ensure data is float32 as expected by FFT class
+            if data.dtype != np.float32:
+                data = data.astype(np.float32)
+
+            _fft_instance = FFT()
+            real_fft, imag_fft = _fft_instance.fft(data)
+
+            # Convert numpy arrays to lists for JSON serialization
+            real_fft_list = real_fft.tolist()
+            imag_fft_list = imag_fft.tolist()
+
+            return jsonify({
+                "status": "success",
+                "fft_real": real_fft_list,
+                "fft_imag": imag_fft_list,
+                "sample_rate": samplerate,
+                "fft_size": len(real_fft)
+            })
+
+        except Exception as e:
+            return jsonify({"error": f"Processing failed: {str(e)}"}), 500
+
+    return jsonify({"error": "An unexpected error occurred"}), 500
 
 # ============================================================================
 # MAIN
