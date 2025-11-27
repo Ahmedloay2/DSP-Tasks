@@ -207,13 +207,32 @@ export default function Task3AnimalEqualizer() {
     }
   };
 
-  const handleUpdateGain = (index, gain) => {
+  const handleUpdateGain = async (index, gain) => {
     if (!config) return;
 
     const newConfig = { ...config };
     const sub = newConfig.subdivisions[index];
     updateSubdivision(newConfig, index, sub.startFreq, sub.endFreq, parseFloat(gain));
     setConfig(newConfig);
+
+    // Automatically process audio if input signal exists
+    if (inputSignal.length > 0) {
+      try {
+        setIsProcessing(true);
+        const processed = await processSignalInChunks(
+          inputSignal,
+          newConfig,
+          (p) => setProgress(p)
+        );
+        setOutputSignal(processed);
+        const audioUrl = signalToAudioUrl(processed, sampleRate);
+        setProcessedAudioUrl(audioUrl);
+        setIsProcessing(false);
+      } catch (error) {
+        console.error('Processing error:', error);
+        setIsProcessing(false);
+      }
+    }
   };
 
   const handleProcess = async () => {
@@ -384,14 +403,6 @@ export default function Task3AnimalEqualizer() {
       {inputSignal.length > 0 && (
         <section className="processing-section-inline">
           <div className="process-controls">
-            <button
-              className="process-btn"
-              onClick={handleProcess}
-              disabled={isProcessing}
-            >
-              <span className="icon">⚡</span>
-              {isProcessing ? 'Processing...' : 'Apply Equalizer'}
-            </button>
             <button className="secondary-btn" onClick={handleReset}>
               🔄 Reset
             </button>
@@ -441,13 +452,61 @@ export default function Task3AnimalEqualizer() {
         </div>
       )}
 
-      {/* Dual Spectrum Viewer - Only show when there's input signal */}
+      {/* Spectrum Viewers - Split into Linear and Audiogram sections */}
       {inputSignal.length > 0 && (
-        <DualSpectrumViewer
-          originalSignal={inputSignal}
-          processedSignal={outputSignal}
-          sampleRate={sampleRate}
-        />
+        <>
+          {/* Linear Scale - Side by Side */}
+          <div className="spectrum-section">
+            <h2>Frequency Spectrum (Linear Scale)</h2>
+            <div className="side-by-side">
+              <DualSpectrumViewer
+                originalSignal={inputSignal}
+                processedSignal={outputSignal}
+                sampleRate={sampleRate}
+                inline={true}
+                showInput={true}
+                showOutput={false}
+                title="Input Signal"
+              />
+              <DualSpectrumViewer
+                originalSignal={inputSignal}
+                processedSignal={outputSignal}
+                sampleRate={sampleRate}
+                inline={true}
+                showInput={false}
+                showOutput={true}
+                title="Output Signal"
+              />
+            </div>
+          </div>
+
+          {/* Audiogram Scale - Side by Side */}
+          <div className="spectrum-section">
+            <h2>Frequency Spectrum (Audiogram Scale)</h2>
+            <div className="side-by-side">
+              <DualSpectrumViewer
+                originalSignal={inputSignal}
+                processedSignal={outputSignal}
+                sampleRate={sampleRate}
+                inline={true}
+                audiogramOnly={true}
+                showInput={true}
+                showOutput={false}
+                title="Input Signal"
+              />
+              <DualSpectrumViewer
+                originalSignal={inputSignal}
+                processedSignal={outputSignal}
+                sampleRate={sampleRate}
+                inline={true}
+                audiogramOnly={true}
+                showInput={false}
+                showOutput={true}
+                title="Output Signal"
+              />
+            </div>
+          </div>
+        </>
       )}
 
       {/* Spectrograms with Toggle */}

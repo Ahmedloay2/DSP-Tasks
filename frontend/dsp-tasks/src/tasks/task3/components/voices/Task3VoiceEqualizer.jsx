@@ -209,12 +209,29 @@ export default function Task3VoiceEqualizer() {
     }
   };
 
-  const handleUpdateGain = (index, gain) => {
-    if (!config) return;
+  const handleUpdateGain = async (index, gain) => {
+    if (!config || inputSignal.length === 0) return;
     const newConfig = { ...config };
     const sub = newConfig.subdivisions[index];
     updateSubdivision(newConfig, index, sub.startFreq, sub.endFreq, parseFloat(gain));
     setConfig(newConfig);
+
+    // Automatically process with updated gain
+    setIsProcessing(true);
+    setProgress(0);
+
+    try {
+      const processed = await processSignalInChunks(inputSignal, newConfig, (p) => setProgress(p));
+      setOutputSignal(processed);
+      const audioUrl = signalToAudioUrl(processed, sampleRate);
+      setProcessedAudioUrl(audioUrl);
+    } catch (error) {
+      console.error('Error processing audio:', error);
+      alert('Error processing audio: ' + error.message);
+    } finally {
+      setIsProcessing(false);
+      setProgress(0);
+    }
   };
 
   const handleProcess = async () => {
@@ -323,7 +340,7 @@ export default function Task3VoiceEqualizer() {
       ...prev,
       [voiceIndex]: gainValue
     }));
-    
+
     // Apply gain to audio player in real-time
     if (voiceAudioRefs.current[voiceIndex]) {
       voiceAudioRefs.current[voiceIndex].volume = Math.min(1.0, Math.max(0, gainValue));
@@ -655,10 +672,6 @@ export default function Task3VoiceEqualizer() {
           {inputSignal.length > 0 && (
             <section className="processing-section-inline">
               <div className="process-controls">
-                <button className="process-btn" onClick={handleProcess} disabled={isProcessing}>
-                  <span className="icon">⚡</span>
-                  {isProcessing ? 'Processing...' : 'Apply Equalizer'}
-                </button>
                 <button className="secondary-btn" onClick={handleReset}>
                   🔄 Reset
                 </button>
@@ -707,12 +720,61 @@ export default function Task3VoiceEqualizer() {
             </div>
           )}
 
+          {/* Spectrum Viewers - Split into Linear and Audiogram sections */}
           {inputSignal.length > 0 && (
-            <DualSpectrumViewer
-              originalSignal={inputSignal}
-              processedSignal={outputSignal}
-              sampleRate={sampleRate}
-            />
+            <>
+              {/* Linear Scale - Side by Side */}
+              <div className="spectrum-section">
+                <h2>Frequency Spectrum (Linear Scale)</h2>
+                <div className="side-by-side">
+                  <DualSpectrumViewer
+                    originalSignal={inputSignal}
+                    processedSignal={outputSignal}
+                    sampleRate={sampleRate}
+                    inline={true}
+                    showInput={true}
+                    showOutput={false}
+                    title="Input Signal"
+                  />
+                  <DualSpectrumViewer
+                    originalSignal={inputSignal}
+                    processedSignal={outputSignal}
+                    sampleRate={sampleRate}
+                    inline={true}
+                    showInput={false}
+                    showOutput={true}
+                    title="Output Signal"
+                  />
+                </div>
+              </div>
+
+              {/* Audiogram Scale - Side by Side */}
+              <div className="spectrum-section">
+                <h2>Frequency Spectrum (Audiogram Scale)</h2>
+                <div className="side-by-side">
+                  <DualSpectrumViewer
+                    originalSignal={inputSignal}
+                    processedSignal={outputSignal}
+                    sampleRate={sampleRate}
+                    inline={true}
+                    audiogramOnly={true}
+                    showInput={true}
+                    showOutput={false}
+                    title="Input Signal"
+                  />
+                  <DualSpectrumViewer
+                    originalSignal={inputSignal}
+                    processedSignal={outputSignal}
+                    sampleRate={sampleRate}
+                    inline={true}
+                    audiogramOnly={true}
+                    showInput={false}
+                    showOutput={true}
+                    title="Output Signal"
+                  />
+                </div>
+              </div>
+            </>
           )}
 
           {inputSignal.length > 0 && (
@@ -748,7 +810,7 @@ export default function Task3VoiceEqualizer() {
             <p className="section-description">
               Adjust gain for each detected voice (0.0x = muted, 1.0x = original, 2.0x = doubled)
             </p>
-            
+
             {separationResults && separationResults.sources && separationResults.sources.length > 0 && (
               <div className="stems-controls-grid">
                 {separationResults.sources.map((source, idx) => (
