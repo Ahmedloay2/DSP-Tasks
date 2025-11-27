@@ -70,9 +70,10 @@ export default function Task3GenericEqualizer() {
     useEffect(() => {
         const initialConfig = createGenericMode(sampleRate);
         // Add 3 default bands
-        addSubdivision(initialConfig, 20, 500, 1.0);    // Low frequencies
-        addSubdivision(initialConfig, 500, 2000, 1.0);  // Mid frequencies
-        addSubdivision(initialConfig, 2000, 8000, 1.0); // High frequencies
+        addSubdivision(initialConfig, 20, 500, 1.0);
+        addSubdivision(initialConfig, 500, 2000, 1.0);
+        // Change 8000 to 22050 to cover the rest of the audio spectrum
+        addSubdivision(initialConfig, 2000, 22050, 1.0);
         setConfig(initialConfig);
     }, []); // Empty dependency array - only run once
 
@@ -637,8 +638,8 @@ function BandModal({ onClose, onAdd }) {
             return;
         }
 
-        if (startFreq < 0 || endFreq < 0 || startFreq > 20000 || endFreq > 20000) {
-            alert('Frequency values must be between 0 and 20000 Hz');
+        if (startFreq < 0 || endFreq < 0 || startFreq > 24000 || endFreq > 24000) {
+            alert('Frequency values must be between 0 and 24000 Hz');
             return;
         }
 
@@ -648,14 +649,14 @@ function BandModal({ onClose, onAdd }) {
     const handleStartFreqInputChange = (e) => {
         const value = parseFloat(e.target.value);
         if (!isNaN(value)) {
-            setStartFreq(Math.max(0, Math.min(20000, value)));
+            setStartFreq(Math.max(0, Math.min(24000, value)));
         }
     };
 
     const handleEndFreqInputChange = (e) => {
         const value = parseFloat(e.target.value);
         if (!isNaN(value)) {
-            setEndFreq(Math.max(0, Math.min(20000, value)));
+            setEndFreq(Math.max(0, Math.min(24000, value)));
         }
     };
 
@@ -672,7 +673,7 @@ function BandModal({ onClose, onAdd }) {
                             <input
                                 type="number"
                                 min="0"
-                                max="20000"
+                                max="24000"
                                 step="1"
                                 value={startFreq}
                                 onChange={handleStartFreqInputChange}
