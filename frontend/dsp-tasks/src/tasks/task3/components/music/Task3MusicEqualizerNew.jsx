@@ -14,6 +14,7 @@ import {
 } from '../../services/equalizerService';
 import {
   separateInstruments,
+  adjustInstrumentGains,
   downloadFile,
   checkServerStatus,
   GAIN_PRESETS,
@@ -610,6 +611,41 @@ export default function Task3MusicEqualizer() {
     setMixedSignalForSpec([]);
   };
 
+  const handleRemixInstruments = async () => {
+    if (!separationResults || !separationResults.session_dir) {
+      alert('No separation session available for remixing!');
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      console.log('🎨 Remixing instruments with new gains:', separationGains);
+
+      const result = await adjustInstrumentGains(separationResults.session_dir, separationGains);
+
+      console.log('✅ Instrument remix complete:', result);
+
+      if (result.mixed_audio_url) {
+        setSeparationResults(prev => ({
+          ...prev,
+          mixed_audio_url: result.mixed_audio_url,
+          mixed_audio_file: result.mixed_file
+        }));
+
+        // Reload mixed signal for waveform viewer
+        await loadMixedSignalOnly(result.mixed_audio_url);
+      }
+
+      alert('Instruments remixed successfully!');
+    } catch (error) {
+      console.error('❌ Remix error:', error);
+      alert(`Remix failed: ${error.message}`);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handleDownloadStem = async (stemPath, stemName) => {
     try {
       await downloadFile(stemPath, `${stemName}.wav`);
@@ -1078,6 +1114,17 @@ export default function Task3MusicEqualizer() {
                     );
                   })}
                 </div>
+              </div>
+
+              {/* Remix Controls */}
+              <div className="remix-controls-section">
+                <button
+                  className="remix-btn"
+                  onClick={handleRemixInstruments}
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? '🔄 Remixing...' : '🎨 Apply Gains & Remix Instruments'}
+                </button>
               </div>
 
               {/* Mixed Output with Viewer */}

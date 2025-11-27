@@ -225,6 +225,9 @@ def separate_instruments():
         print(f"✅ Separation complete!")
         
         result['session_id'] = session_id
+        # Add session_dir for remix functionality (just the folder name)
+        if 'output_directory' in result:
+            result['session_dir'] = os.path.basename(result['output_directory'])
         return jsonify(result)
         
     except Exception as e:
@@ -241,6 +244,125 @@ def separate_instruments():
             }
         
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/instruments/adjust-gains', methods=['POST'])
+def adjust_instrument_gains():
+    """
+    Re-mix separated instrument stems with new gain settings without re-separating
+    
+    JSON body:
+        {
+            "session_dir": "output_1234567890",
+            "gains": {
+                "drums": 1.5,
+                "bass": 0.8,
+                "vocals": 1.0,
+                "guitar": 1.2,
+                "piano": 0.5,
+                "other": 1.0
+            }
+        }
+    
+    Returns:
+        JSON with new mixed file path
+    """
+    
+    try:
+        data = request.get_json()
+        
+        if not data or 'session_dir' not in data:
+            return jsonify({'success': False, 'error': 'session_dir required'}), 400
+        
+        session_dir = OUTPUT_FOLDER / data['session_dir']
+        
+        if not session_dir.exists():
+            return jsonify({'success': False, 'error': 'Session not found'}), 404
+        
+        gains = data.get('gains', {})
+        
+        print(f"🎚️ Adjusting instrument gains: {gains}")
+        
+        # Load all stem files from the trimmed folder
+        stems_folder = session_dir / 'trimmed_stems'
+        if not stems_folder.exists():
+            # Try demucs_output if trimmed doesn't exist
+            stems_folder = session_dir / 'demucs_output'
+            if not stems_folder.exists():
+                return jsonify({'success': False, 'error': 'No stems found'}), 404
+        
+        stem_names = ['drums', 'bass', 'vocals', 'guitar', 'piano', 'other']
+        stems = {}
+        sample_rate = None
+        
+        for stem_name in stem_names:
+            # Try trimmed filename first (e.g., drums_trimmed.wav)
+            stem_path = stems_folder / f'{stem_name}_trimmed.wav'
+            if not stem_path.exists():
+                # Fall back to simple name (e.g., drums.wav)
+                stem_path = stems_folder / f'{stem_name}.wav'
+            if stem_path.exists():
+                audio, sr = sf.read(str(stem_path))
+                stems[stem_name] = audio
+                sample_rate = sr
+                print(f"  ✅ Loaded {stem_name}: {stem_path.name}")
+        
+        if not stems:
+            return jsonify({'success': False, 'error': 'No stem files found'}), 404
+        
+        # Find the maximum length among all stems (they may have different lengths after trimming)
+        max_length = max(len(audio) for audio in stems.values())
+        
+        # Check if stereo or mono
+        first_stem = list(stems.values())[0]
+        is_stereo = len(first_stem.shape) > 1 and first_stem.shape[1] == 2
+        
+        # Create output buffer with max length
+        if is_stereo:
+            mixed_audio = np.zeros((max_length, 2))
+        else:
+            mixed_audio = np.zeros(max_length)
+        
+        # Mix with new gains, padding shorter stems with zeros
+        for stem_name, audio in stems.items():
+            gain = float(gains.get(stem_name, 1.0))
+            stem_length = len(audio)
+            if is_stereo:
+                mixed_audio[:stem_length, :] += audio * gain
+            else:
+                mixed_audio[:stem_length] += audio * gain
+        
+        # Normalize to prevent clipping
+        max_val = np.abs(mixed_audio).max()
+        if max_val > 0.99:
+            mixed_audio = mixed_audio * (0.99 / max_val)
+        
+        # Save new mix with timestamp to avoid caching issues
+        timestamp = int(time.time() * 1000)
+        mixed_filename = f"mixed_adjusted_{timestamp}.wav"
+        mixed_path = session_dir / mixed_filename
+        sf.write(
+            str(mixed_path),
+            mixed_audio,
+            sample_rate,
+            subtype='PCM_16'
+        )
+        
+        print(f"✅ Saved adjusted instrument mix: {mixed_path}")
+        
+        return jsonify({
+            'success': True,
+            'mixed_file': f"{data['session_dir']}/{mixed_filename}",
+            'gains': gains,
+            'timestamp': timestamp
+        })
+        
+    except Exception as e:
+        print(f"❌ Error adjusting instrument gains: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 
 # ============================================================================
 # VOICE SEPARATION ENDPOINTS
@@ -436,8 +558,10 @@ def adjust_voice_gains():
         if max_val > 0.99:
             mixed_audio = mixed_audio * (0.99 / max_val)
         
-        # Save new mix
-        mixed_path = session_dir / "mixed_adjusted.wav"
+        # Save new mix with timestamp to avoid caching issues
+        timestamp = int(time.time() * 1000)
+        mixed_filename = f"mixed_adjusted_{timestamp}.wav"
+        mixed_path = session_dir / mixed_filename
         sf.write(
             str(mixed_path),
             mixed_audio,
@@ -449,8 +573,9 @@ def adjust_voice_gains():
         
         return jsonify({
             'success': True,
-            'mixed_file': f"{data['session_dir']}/mixed_adjusted.wav",
-            'gains': gains
+            'mixed_file': f"{data['session_dir']}/{mixed_filename}",
+            'gains': gains,
+            'timestamp': timestamp
         })
         
     except Exception as e:
@@ -845,6 +970,7 @@ def main():
     print()
     print("   INSTRUMENT SEPARATION:")
     print("   POST /api/separate - Separate instruments (6 stems)")
+    print("   POST /api/instruments/adjust-gains - Adjust instrument gains")
     print()
     print("   VOICE SEPARATION:")
     print("   POST /api/separate-voices - Separate voices (multi-speaker)")

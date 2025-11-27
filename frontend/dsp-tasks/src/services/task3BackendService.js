@@ -129,6 +129,46 @@ export async function separateInstruments(audioFile, gains = {}, onProgress = nu
     }
 }
 
+/**
+ * Adjust gains for already separated instruments without re-separating
+ * @param {string} sessionDir - Session directory name
+ * @param {Object} gains - New gain settings {stemName: gainValue}
+ * @returns {Promise<Object>}
+ */
+export async function adjustInstrumentGains(sessionDir, gains) {
+    try {
+        const response = await fetch(`${SERVER_URL}/api/instruments/adjust-gains`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                session_dir: sessionDir,
+                gains: gains
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to adjust instrument gains');
+        }
+
+        const result = await response.json();
+        console.log('✅ Instrument gains adjusted:', result);
+
+        // Convert file path to URL with timestamp for cache busting
+        if (result.mixed_file) {
+            result.mixed_audio_url = `${SERVER_URL}/api/download/${encodeURIComponent(result.mixed_file)}`;
+        }
+
+        return result;
+
+    } catch (error) {
+        console.error('❌ Error adjusting instrument gains:', error);
+        throw error;
+    }
+}
+
 // ============================================================================
 // FILE MANAGEMENT
 // ============================================================================

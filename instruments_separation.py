@@ -134,11 +134,12 @@ class InstrumentSeparator:
         demucs_output = self.run_dir / "demucs_output"
         demucs_output.mkdir(parents=True, exist_ok=True)
         
-        # Run Demucs using Python API (more reliable than shell command)
+        # Run Demucs using Python module (more reliable than shell command)
         try:
             import subprocess
+            import sys
             cmd = [
-                'demucs',
+                sys.executable, '-m', 'demucs',
                 '--name', 'htdemucs_6s',
                 str(self.input_audio_path),
                 '-o', str(demucs_output)
