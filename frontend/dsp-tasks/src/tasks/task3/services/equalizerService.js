@@ -191,8 +191,8 @@ export function processSignal(signal, config) {
 }
 
 /**
- * Process signal in chunks to prevent stack overflow
- * Uses adaptive chunk size based on audio length for optimal performance
+ * Process signal in chunks with crossfade to eliminate clicking artifacts
+ * Uses overlapping chunks with linear crossfade for smooth transitions
  * @param {Array} signal - Input signal
  * @param {Object} config - Configuration object
  * @param {Function} progressCallback - Progress callback function
@@ -201,10 +201,13 @@ export function processSignal(signal, config) {
 export async function processSignalInChunks(signal, config, progressCallback = null) {
   const totalSamples = signal.length;
 
+  // Crossfade overlap size (1024 samples for smooth transitions)
+  const crossfadeSize = 1024;
+
   // Adaptive chunk size based on total signal length
   let chunkSize;
   if (totalSamples < 65536) {
-    // Short audio: process all at once
+    // Short audio: process all at once (no crossfade needed)
     chunkSize = totalSamples;
   } else if (totalSamples < 262144) { // < ~6 seconds at 44.1kHz
     // Medium audio: use 64K chunks
@@ -220,54 +223,90 @@ export async function processSignalInChunks(signal, config, progressCallback = n
   // Ensure chunk size is power of 2 for efficient FFT
   chunkSize = Math.pow(2, Math.floor(Math.log2(chunkSize)));
 
-  const numChunks = Math.ceil(totalSamples / chunkSize);
-  const processedChunks = [];
+  // If processing all at once, no crossfade needed
+  if (chunkSize >= totalSamples) {
+    const processedSignal = processSignal(signal, config);
+    if (progressCallback) progressCallback(1);
+    return processedSignal;
+  }
+
+  // Step size: chunk size minus overlap
+  const stepSize = chunkSize - crossfadeSize;
+
+  // Calculate number of chunks needed
+  const numChunks = Math.ceil((totalSamples - crossfadeSize) / stepSize);
+
+  // Output buffer
+  const result = new Float32Array(totalSamples);
+
+  // Track what's been written for crossfade
+  let prevChunkEnd = null; // Last crossfadeSize samples of previous chunk
 
   for (let i = 0; i < numChunks; i++) {
-    const start = i * chunkSize;
+    const start = i * stepSize;
+    // Each chunk extends crossfadeSize beyond the step to create overlap
     const end = Math.min(start + chunkSize, totalSamples);
     const actualChunkLength = end - start;
-    let chunk = signal.slice(start, end);
 
-    // Pad the last chunk to chunkSize for consistent FFT resolution
-    if (chunk.length < chunkSize) {
-      const paddedChunk = new Float32Array(chunkSize);
-      paddedChunk.set(chunk);
-      // Zero-padding the rest
-      for (let j = chunk.length; j < chunkSize; j++) {
-        paddedChunk[j] = 0;
+    // Extract chunk
+    let chunk;
+    if (actualChunkLength < chunkSize) {
+      // Pad the last chunk to chunkSize for consistent FFT resolution
+      chunk = new Float32Array(chunkSize);
+      for (let j = 0; j < actualChunkLength; j++) {
+        chunk[j] = signal[start + j];
       }
-      chunk = paddedChunk;
+      // Rest is zero-padded
+    } else {
+      chunk = signal.slice(start, end);
     }
 
-    // Process chunk (now always same size)
+    // Process chunk (now always same size or padded)
     const processedChunk = processSignal(chunk, config);
 
-    // Trim back to original length if we padded
-    const trimmedChunk = processedChunk.slice(0, actualChunkLength);
-    processedChunks.push(trimmedChunk);
+    // Write to output with crossfade
+    if (i === 0) {
+      // First chunk: write directly (no crossfade at start)
+      const writeLength = Math.min(actualChunkLength, totalSamples - start);
+      for (let j = 0; j < writeLength; j++) {
+        result[start + j] = processedChunk[j];
+      }
+    } else {
+      // Apply crossfade in the overlap region
+      const overlapStart = start; // Where this chunk starts (overlap region)
+      const fadeLength = Math.min(crossfadeSize, actualChunkLength, totalSamples - overlapStart);
+
+      // Crossfade: blend previous chunk's tail with current chunk's head
+      for (let j = 0; j < fadeLength; j++) {
+        const fadeOut = 1 - (j / fadeLength); // Previous chunk fades out
+        const fadeIn = j / fadeLength;         // Current chunk fades in
+
+        // The overlap region already has data from previous chunk
+        // Blend it with the new chunk's beginning
+        result[overlapStart + j] = result[overlapStart + j] * fadeOut + processedChunk[j] * fadeIn;
+      }
+
+      // Write the rest of the chunk (after crossfade region)
+      const nonOverlapStart = fadeLength;
+      const nonOverlapEnd = Math.min(actualChunkLength, totalSamples - start);
+      for (let j = nonOverlapStart; j < nonOverlapEnd; j++) {
+        result[start + j] = processedChunk[j];
+      }
+    }
 
     // Update progress
     if (progressCallback) {
       progressCallback((i + 1) / numChunks);
     }
 
-    // Yield to UI less frequently (only every 5 chunks or at end)
+    // Yield to UI periodically
     if (i % 5 === 0 || i === numChunks - 1) {
       await new Promise(resolve => setTimeout(resolve, 0));
     }
   }
 
-  // Combine chunks more efficiently
-  const result = new Array(totalSamples);
-  let offset = 0;
-  for (const chunk of processedChunks) {
-    for (let i = 0; i < chunk.length; i++) {
-      result[offset++] = chunk[i];
-    }
-  }
-
-  return result;
+  // Convert to regular array and return
+  return Array.from(result);
 }/**
  * Generate frequency spectrum from signal (OPTIMIZED with Float32Array)
  * @param {Array|Float32Array} signal - Input signal
