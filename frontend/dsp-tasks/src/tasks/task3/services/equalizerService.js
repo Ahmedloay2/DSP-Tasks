@@ -107,29 +107,38 @@ export function applyEqualizer(complexSignal, config) {
     modified[i] = new Complex(complexSignal[i].real, complexSignal[i].imag);
   }
 
+  // Calculate frequency resolution
+  const freqResolution = sampleRate / N;
+  const nyquistFreq = sampleRate / 2;
+
   // Apply each subdivision's scaling
   for (const subdivision of config.subdivisions) {
-    let startBin = freqToBin(subdivision.startFreq, sampleRate, N);
-    let endBin = freqToBin(subdivision.endFreq, sampleRate, N);
+    // Calculate bin indices with proper rounding
+    let startBin = Math.round(subdivision.startFreq / freqResolution);
+    let endBin = Math.round(subdivision.endFreq / freqResolution);
 
-    // Clamp to valid range
-    startBin = Math.max(0, Math.min(startBin, N / 2));
-    endBin = Math.max(0, Math.min(endBin, N / 2));
+    // Clamp to valid range (0 to Nyquist bin)
+    const nyquistBin = Math.floor(N / 2);
+    startBin = Math.max(0, Math.min(startBin, nyquistBin));
+    endBin = Math.max(0, Math.min(endBin, nyquistBin));
 
     const scale = subdivision.scale;
 
-    // Apply scaling to positive frequencies
+    // Apply scaling to positive frequencies (including all bins in range)
     for (let i = startBin; i <= endBin; i++) {
       modified[i].real *= scale;
       modified[i].imag *= scale;
     }
 
     // Apply scaling to negative frequencies (mirror)
+    // For real signals, the FFT is symmetric: X[k] = conj(X[N-k])
     for (let i = startBin; i <= endBin; i++) {
-      if (i > 0 && i < N) {
+      if (i > 0 && i < nyquistBin) { // Skip DC (0) and Nyquist (N/2)
         const mirrorIndex = N - i;
-        modified[mirrorIndex].real *= scale;
-        modified[mirrorIndex].imag *= scale;
+        if (mirrorIndex > 0 && mirrorIndex < N) {
+          modified[mirrorIndex].real *= scale;
+          modified[mirrorIndex].imag *= scale;
+        }
       }
     }
   }
@@ -183,26 +192,60 @@ export function processSignal(signal, config) {
 
 /**
  * Process signal in chunks to prevent stack overflow
+ * Uses adaptive chunk size based on audio length for optimal performance
  * @param {Array} signal - Input signal
  * @param {Object} config - Configuration object
  * @param {Function} progressCallback - Progress callback function
  * @returns {Promise<Array>} Processed signal
  */
 export async function processSignalInChunks(signal, config, progressCallback = null) {
-  const chunkSize = 131072; // 128K samples (increased from 32K for better performance)
   const totalSamples = signal.length;
-  const numChunks = Math.ceil(totalSamples / chunkSize);
 
+  // Adaptive chunk size based on total signal length
+  let chunkSize;
+  if (totalSamples < 65536) {
+    // Short audio: process all at once
+    chunkSize = totalSamples;
+  } else if (totalSamples < 262144) { // < ~6 seconds at 44.1kHz
+    // Medium audio: use 64K chunks
+    chunkSize = 65536;
+  } else if (totalSamples < 1048576) { // < ~24 seconds at 44.1kHz
+    // Longer audio: use 128K chunks
+    chunkSize = 131072;
+  } else {
+    // Very long audio: use 256K chunks
+    chunkSize = 262144;
+  }
+
+  // Ensure chunk size is power of 2 for efficient FFT
+  chunkSize = Math.pow(2, Math.floor(Math.log2(chunkSize)));
+
+  const numChunks = Math.ceil(totalSamples / chunkSize);
   const processedChunks = [];
 
   for (let i = 0; i < numChunks; i++) {
     const start = i * chunkSize;
     const end = Math.min(start + chunkSize, totalSamples);
-    const chunk = signal.slice(start, end);
+    const actualChunkLength = end - start;
+    let chunk = signal.slice(start, end);
 
-    // Process chunk
+    // Pad the last chunk to chunkSize for consistent FFT resolution
+    if (chunk.length < chunkSize) {
+      const paddedChunk = new Float32Array(chunkSize);
+      paddedChunk.set(chunk);
+      // Zero-padding the rest
+      for (let j = chunk.length; j < chunkSize; j++) {
+        paddedChunk[j] = 0;
+      }
+      chunk = paddedChunk;
+    }
+
+    // Process chunk (now always same size)
     const processedChunk = processSignal(chunk, config);
-    processedChunks.push(processedChunk);
+
+    // Trim back to original length if we padded
+    const trimmedChunk = processedChunk.slice(0, actualChunkLength);
+    processedChunks.push(trimmedChunk);
 
     // Update progress
     if (progressCallback) {
@@ -225,9 +268,7 @@ export async function processSignalInChunks(signal, config, progressCallback = n
   }
 
   return result;
-}
-
-/**
+}/**
  * Generate frequency spectrum from signal (OPTIMIZED with Float32Array)
  * @param {Array|Float32Array} signal - Input signal
  * @param {number} sampleRate - Sample rate in Hz
